@@ -18,6 +18,7 @@ import { config as loadDotenv } from 'dotenv';
 import { createCipheriv, randomBytes } from 'node:crypto';
 import { DataSource } from 'typeorm';
 import { AppConfig, loadConfig } from '../config/configuration';
+import { stableUuid } from '../common/utils/stable-uuid';
 import { buildDataSourceOptions } from './data-source';
 import {
   BudgetEntity,
@@ -120,7 +121,7 @@ export async function seedDemo(ds: DataSource, cfg: Pick<AppConfig, 'ENCRYPTION_
   const catBySlug = new Map<CategorySlug, CategoryEntity>();
   for (const [i, def] of CATEGORY_CATALOG.entries()) {
     let c = await categories.findOne({ where: { slug: def.slug } });
-    if (!c) c = categories.create({ slug: def.slug, isCustom: false, userId: null });
+    if (!c) c = categories.create({ id: stableUuid(`category:${def.slug}`), slug: def.slug, isCustom: false, userId: null });
     Object.assign(c, { name: def.name, icon: def.icon, color: def.color, sortOrder: i });
     catBySlug.set(def.slug, await categories.save(c));
   }
@@ -139,9 +140,10 @@ export async function seedDemo(ds: DataSource, cfg: Pick<AppConfig, 'ENCRYPTION_
     }
   }
 
-  const household = await households.save(households.create({ name: 'The Sharmas', inviteCode: 'DEMO42' }));
+  const household = await households.save(households.create({ id: stableUuid('household:sharmas'), name: 'The Sharmas', inviteCode: 'DEMO42' }));
   const demo = await users.save(
     users.create({
+      id: stableUuid('user:demo@tapntally.app'),
       email: 'demo@tapntally.app', name: 'Arjun Sharma', avatarUrl: null, googleSub: null,
       householdId: household.id, householdRole: HouseholdRole.OWNER, householdJoinedAt: new Date(Date.now() - 40 * 86400e3),
       aggregateInsightsConsent: true,
@@ -149,6 +151,7 @@ export async function seedDemo(ds: DataSource, cfg: Pick<AppConfig, 'ENCRYPTION_
   );
   const priya = await users.save(
     users.create({
+      id: stableUuid('user:priya@tapntally.app'),
       email: 'priya@tapntally.app', name: 'Priya Sharma', avatarUrl: null, googleSub: null,
       householdId: household.id, householdRole: HouseholdRole.MEMBER, householdJoinedAt: new Date(Date.now() - 38 * 86400e3),
       aggregateInsightsConsent: true,
@@ -156,7 +159,7 @@ export async function seedDemo(ds: DataSource, cfg: Pick<AppConfig, 'ENCRYPTION_
   );
 
   let terminal = await terminals.findOne({ where: { network: 'demo', terminalId: 'DEMO-001' } });
-  if (!terminal) terminal = terminals.create({ network: 'demo', terminalId: 'DEMO-001', active: true, billsReceived: 0 });
+  if (!terminal) terminal = terminals.create({ id: stableUuid('terminal:demo:DEMO-001'), network: 'demo', terminalId: 'DEMO-001', active: true, billsReceived: 0 });
   terminal.merchantName = 'Vidyarthi Bhavan';
   terminal.merchantGstin = null;
   terminal.encryptedSecret = encryptWith(cfg.ENCRYPTION_KEY, DEMO_TERMINAL_SECRET);
@@ -178,6 +181,7 @@ export async function seedDemo(ds: DataSource, cfg: Pick<AppConfig, 'ENCRYPTION_
         const ref = `${source}-${user.id.slice(0, 8)}-${day}-${i}`;
         await txs.save(
           txs.create({
+            id: stableUuid(`tx:${ref}`),
             userId: user.id, householdId: household.id, source,
             merchant: m.name, merchantKey: normalizeMerchant(m.name),
             amountPaise, currency: 'INR',
@@ -195,7 +199,7 @@ export async function seedDemo(ds: DataSource, cfg: Pick<AppConfig, 'ENCRYPTION_
   }
 
   const b = (scope: BudgetScope, ownerId: string, slug: CategorySlug, rupees: number) =>
-    budgets.save(budgets.create({ scope, ownerId, categoryId: catBySlug.get(slug)!.id, limitPaise: rupees * 100, period: BudgetPeriod.MONTHLY, alertThreshold: 0.8, lastAlertedPeriod: null }));
+    budgets.save(budgets.create({ id: stableUuid(`budget:${scope}:${ownerId}:${slug}`), scope, ownerId, categoryId: catBySlug.get(slug)!.id, limitPaise: rupees * 100, period: BudgetPeriod.MONTHLY, alertThreshold: 0.8, lastAlertedPeriod: null }));
   await b(BudgetScope.USER, demo.id, CategorySlug.RESTAURANTS, 6000);
   await b(BudgetScope.USER, demo.id, CategorySlug.SHOPPING, 8000);
   await b(BudgetScope.USER, demo.id, CategorySlug.TRANSPORT, 3000);
@@ -203,7 +207,7 @@ export async function seedDemo(ds: DataSource, cfg: Pick<AppConfig, 'ENCRYPTION_
   await b(BudgetScope.HOUSEHOLD, household.id, CategorySlug.GROCERIES, 12000);
   await b(BudgetScope.HOUSEHOLD, household.id, CategorySlug.BILLS_UTILITIES, 5000);
 
-  await connections.save(connections.create({ userId: demo.id, type: ConnectionType.SMS, status: ConnectionStatus.ACTIVE, importedCount: 30, consecutiveFailures: 0, lastSyncedAt: new Date() }));
+  await connections.save(connections.create({ id: stableUuid('connection:demo:sms'), userId: demo.id, type: ConnectionType.SMS, status: ConnectionStatus.ACTIVE, importedCount: 30, consecutiveFailures: 0, lastSyncedAt: new Date() }));
 
   log(`Seeded: 2 users, 1 household, ${count} transactions, 6 budgets, 1 demo terminal.`);
   return count;

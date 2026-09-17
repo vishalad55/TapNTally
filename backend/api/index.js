@@ -2,11 +2,23 @@
 // dist/; this shim exists so Vercel's tracer follows a static require, and so
 // hosted-demo defaults are in place before the config module loads.
 /* eslint-disable @typescript-eslint/no-require-imports */
-const { randomBytes } = require('node:crypto');
+const { createHash } = require('node:crypto');
 
 // Hosted DEMO defaults — every one of these is overridden by a real env var
-// set in the Vercel dashboard. Secrets fall back to per-cold-start random
-// values, which is acceptable only because the demo database is ephemeral too.
+// set in the Vercel dashboard.
+//
+// Secrets are *derived per deployment* (not random per cold start): the API
+// runs as several serverless instances, and a token minted by one must verify
+// on another. Deployment ids are semi-public, so this is acceptable only
+// because the demo database is ephemeral seed data. Real deployments MUST set
+// JWT_SECRET / ENCRYPTION_KEY / INTERNAL_API_KEY explicitly.
+const deploymentSeed =
+  [process.env.VERCEL_DEPLOYMENT_ID, process.env.VERCEL_PROJECT_ID, process.env.VERCEL_URL, process.env.VERCEL_GIT_COMMIT_SHA]
+    .filter(Boolean)
+    .join('|') || 'local-demo';
+const derive = (label, bytes, encoding = 'base64') =>
+  createHash('sha512').update(`tapntally-demo:${label}:${deploymentSeed}`).digest().subarray(0, bytes).toString(encoding);
+
 const defaults = {
   DEMO_MODE: 'true',
   DEMO_AUTOSEED: 'true',
@@ -16,9 +28,9 @@ const defaults = {
   DB_SYNCHRONIZE: 'true',
   NFC_REQUIRE_SIGNATURE: 'false',
   CORS_ORIGINS: '',
-  JWT_SECRET: randomBytes(48).toString('base64'),
-  ENCRYPTION_KEY: randomBytes(32).toString('base64'),
-  INTERNAL_API_KEY: randomBytes(24).toString('base64url'),
+  JWT_SECRET: derive('jwt', 48),
+  ENCRYPTION_KEY: derive('enc', 32),
+  INTERNAL_API_KEY: derive('internal', 24, 'base64url'),
 };
 for (const [k, v] of Object.entries(defaults)) if (!process.env[k]) process.env[k] = v;
 
@@ -44,7 +56,6 @@ module.exports = (req, res) => {
         code: 'BOOT_LOAD_FAILED',
         message: String(loadError && loadError.message),
         stack: String(loadError && loadError.stack).split('\n').slice(0, 8),
-        cwd: process.cwd(),
         node: process.version,
       }),
     );

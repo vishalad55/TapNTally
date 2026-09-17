@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CATEGORY_CATALOG, Category, CategorySlug } from '@tapntally/shared';
 import { In, IsNull, Repository } from 'typeorm';
 import { AppError } from '../../common/filters/http-exception.filter';
+import { stableUuid } from '../../common/utils/stable-uuid';
 import { CategoryEntity } from '../../database/entities';
 
 @Injectable()
@@ -21,7 +22,8 @@ export class CategoriesService implements OnModuleInit {
     for (const [i, def] of CATEGORY_CATALOG.entries()) {
       let entity = bySlug.get(def.slug);
       if (!entity) {
-        entity = this.categories.create({ slug: def.slug, isCustom: false, userId: null });
+        // Stable id per slug so every API instance agrees on category ids.
+        entity = this.categories.create({ id: stableUuid(`category:${def.slug}`), slug: def.slug, isCustom: false, userId: null });
         created++;
       }
       entity.name = def.name;
