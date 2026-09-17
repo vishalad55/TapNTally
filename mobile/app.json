@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "TapNTally",
+    "slug": "tapntally",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "tapntally",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F172A"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "app.tapntally.mobile",
+      "infoPlist": {
+        "NFCReaderUsageDescription": "TapNTally reads your bill from the payment terminal when you tap your phone after paying.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "com.apple.developer.nfc.readersession.formats": ["NDEF", "TAG"]
+      }
+    },
+    "android": {
+      "package": "app.tapntally.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F172A"
+      },
+      "permissions": [
+        "android.permission.NFC",
+        "android.permission.READ_SMS",
+        "android.permission.RECEIVE_SMS",
+        "android.permission.POST_NOTIFICATIONS"
+      ],
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "react-native-nfc-manager",
+      [
+        "expo-notifications",
+        { "icon": "./assets/notification-icon.png", "color": "#22C55E" }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        { "iosUrlScheme": "com.googleusercontent.apps.REPLACE_WITH_IOS_CLIENT_ID" }
+      ]
+    ],
+    "experiments": { "typedRoutes": true },
+    "extra": {
+      "apiUrl": "http://localhost:3000/api/v1",
+      "googleWebClientId": "",
+      "eas": { "projectId": "" }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Build shared
+        run: npm run build --workspace @tapntally/shared
+      - name: Test shared
+        run: npm test --workspace @tapntally/shared
+      - name: Typecheck + build backend
+        run: npm run build --workspace @tapntally/backend
+      - name: Test backend
+        run: npm test --workspace @tapntally/backend
+      - name: Typecheck mobile
+        run: npm run typecheck --workspace @tapntally/mobile
+      - name: Lint
+        run: npm run lint
+      - name: API smoke test (sql.js, in-process queue)
+        working-directory: backend
+        run: |
+          npm run db:seed
+          (node dist/main.js > server.log 2>&1 &)
+          curl -s --retry 40 --retry-delay 1 --retry-connrefused http://localhost:3000/health
+          node scripts/smoke.mjs
+      - name: Docker build
+        run: docker build -f backend/Dockerfile -t tapntally-api:ci .

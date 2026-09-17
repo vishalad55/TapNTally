@@ -1,0 +1,32 @@
+{
+  "name": "tapntally",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TapNTally — NFC tap-to-get-bill expense tracking for India",
+  "workspaces": [
+    "shared",
+    "backend",
+    "mobile"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "npm run build --workspace @tapntally/shared && npm run build --workspace @tapntally/backend",
+    "dev:backend": "npm run dev --workspace @tapntally/backend",
+    "dev:mobile": "npm run start --workspace @tapntally/mobile",
+    "test": "npm run test --workspace @tapntally/shared && npm run test --workspace @tapntally/backend",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "db:migrate": "npm run db:migrate --workspace @tapntally/backend",
+    "db:seed": "npm run db:seed --workspace @tapntally/backend"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2"
+  }
+}
