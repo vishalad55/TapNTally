@@ -13,14 +13,14 @@ import { Icon } from '../src/theme/icons';
 export default function Pair() {
   const t = useTheme();
   const pairing = usePairingCode();
+  const requestCode = pairing.mutate; // stable reference from react-query
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
-    pairing.mutate();
+    requestCode();
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [requestCode]);
 
   const data = pairing.data;
   const secondsLeft = data ? Math.max(0, Math.round((new Date(data.expiresAt).getTime() - now) / 1000)) : 0;
