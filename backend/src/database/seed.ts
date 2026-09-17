@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import 'reflect-metadata';
+import type { INestApplicationContext, LoggerService } from '@nestjs/common';
 import {
   BudgetPeriod,
   BudgetScope,
@@ -16,7 +17,7 @@ import {
 import { config as loadDotenv } from 'dotenv';
 import { createCipheriv, randomBytes } from 'node:crypto';
 import { DataSource } from 'typeorm';
-import { loadConfig } from '../config/configuration';
+import { AppConfig, loadConfig } from '../config/configuration';
 import { buildDataSourceOptions } from './data-source';
 import {
   BudgetEntity,
@@ -30,30 +31,25 @@ import {
 
 /**
  * Demo data for a convincing walkthrough. Idempotent: re-running wipes and
- * recreates only the demo users' data. Run with `npm run db:seed`.
+ * recreates only the demo users' data.
+ *
+ *   CLI:      npm run db:seed
+ *   Runtime:  DEMO_AUTOSEED=true (hosted demo with an in-memory DB)
  *
  * Demo accounts (dev login):  demo@tapntally.app  (owner)
  *                              priya@tapntally.app (household member)
  * Demo terminal secret:        demo-terminal-secret-0001   (network=demo, id=DEMO-001)
  */
 export const DEMO_TERMINAL_SECRET = 'demo-terminal-secret-0001';
+export const DEMO_EMAILS = ['demo@tapntally.app', 'priya@tapntally.app'] as const;
 
-loadDotenv({ path: ['.env', '.env.example'] });
-const cfg = loadConfig();
-
-function encrypt(plaintext: string): string {
-  const key = Buffer.from(cfg.ENCRYPTION_KEY, 'base64');
+function encryptWith(keyB64: string, plaintext: string): string {
+  const key = Buffer.from(keyB64, 'base64');
   const iv = randomBytes(12);
   const cipher = createCipheriv('aes-256-gcm', key, iv);
   const ct = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
   return `v1:${Buffer.concat([iv, cipher.getAuthTag(), ct]).toString('base64')}`;
 }
-
-// Deterministic PRNG so the demo looks the same on every machine.
-let seed = 20260917;
-const rand = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
-const pick = <T>(arr: readonly T[]) => arr[Math.floor(rand() * arr.length)];
-const between = (lo: number, hi: number) => lo + Math.floor(rand() * (hi - lo + 1));
 
 interface MerchantProfile {
   name: string;
@@ -62,7 +58,7 @@ interface MerchantProfile {
   freq: number; // relative frequency weight
   method: PaymentMethod[];
   source: TransactionSource[];
-  items?: () => Array<{ name: string; qty: number; unit: number }>;
+  items?: (between: (lo: number, hi: number) => number) => Array<{ name: string; qty: number; unit: number }>;
   mcc?: string;
 }
 
@@ -71,14 +67,14 @@ const MERCHANTS: MerchantProfile[] = [
   { name: 'Zomato', min: 200, max: 1100, freq: 7, method: [PaymentMethod.UPI, PaymentMethod.CARD], source: [TransactionSource.SMS, TransactionSource.GMAIL] },
   { name: 'BigBasket', min: 600, max: 3200, freq: 5, method: [PaymentMethod.UPI], source: [TransactionSource.GMAIL] },
   { name: 'Reliance Fresh - Koramangala', min: 350, max: 2400, freq: 6, method: [PaymentMethod.CARD, PaymentMethod.CASH], source: [TransactionSource.NFC], mcc: '5411',
-    items: () => [
-      { name: 'Amul Taaza Milk 1L', qty: between(1, 3), unit: 68 }, { name: 'Aashirvaad Atta 5kg', qty: 1, unit: 285 },
+    items: (b) => [
+      { name: 'Amul Taaza Milk 1L', qty: b(1, 3), unit: 68 }, { name: 'Aashirvaad Atta 5kg', qty: 1, unit: 285 },
       { name: 'Tomatoes (kg)', qty: 1, unit: 42 }, { name: 'Onions (kg)', qty: 2, unit: 35 }, { name: 'Tata Salt 1kg', qty: 1, unit: 28 },
-    ].slice(0, between(2, 5)) },
+    ].slice(0, b(2, 5)) },
   { name: 'Vidyarthi Bhavan', min: 180, max: 620, freq: 4, method: [PaymentMethod.CARD, PaymentMethod.CASH], source: [TransactionSource.NFC], mcc: '5812',
-    items: () => [{ name: 'Masala Dosa', qty: between(1, 3), unit: 90 }, { name: 'Filter Coffee', qty: between(1, 2), unit: 35 }] },
+    items: (b) => [{ name: 'Masala Dosa', qty: b(1, 3), unit: 90 }, { name: 'Filter Coffee', qty: b(1, 2), unit: 35 }] },
   { name: 'Third Wave Coffee', min: 220, max: 680, freq: 5, method: [PaymentMethod.CARD, PaymentMethod.UPI], source: [TransactionSource.NFC, TransactionSource.SMS], mcc: '5814',
-    items: () => [{ name: 'Flat White', qty: between(1, 2), unit: 240 }, { name: 'Almond Croissant', qty: 1, unit: 180 }] },
+    items: (b) => [{ name: 'Flat White', qty: b(1, 2), unit: 240 }, { name: 'Almond Croissant', qty: 1, unit: 180 }] },
   { name: 'Amazon', min: 299, max: 4999, freq: 6, method: [PaymentMethod.UPI, PaymentMethod.CARD], source: [TransactionSource.GMAIL] },
   { name: 'Flipkart', min: 399, max: 6999, freq: 3, method: [PaymentMethod.CARD], source: [TransactionSource.GMAIL] },
   { name: 'Myntra', min: 799, max: 3499, freq: 2, method: [PaymentMethod.UPI], source: [TransactionSource.GMAIL] },
@@ -86,7 +82,7 @@ const MERCHANTS: MerchantProfile[] = [
   { name: 'Rapido', min: 45, max: 160, freq: 5, method: [PaymentMethod.UPI], source: [TransactionSource.SMS] },
   { name: 'Namma Metro', min: 30, max: 80, freq: 6, method: [PaymentMethod.UPI], source: [TransactionSource.SMS] },
   { name: 'Indian Oil - HSR Layout', min: 1500, max: 3200, freq: 2, method: [PaymentMethod.CARD], source: [TransactionSource.NFC], mcc: '5541',
-    items: () => [{ name: 'Petrol (L)', qty: between(15, 30), unit: 103 }] },
+    items: (b) => [{ name: 'Petrol (L)', qty: b(15, 30), unit: 103 }] },
   { name: 'Apollo Pharmacy', min: 180, max: 1400, freq: 2, method: [PaymentMethod.CARD, PaymentMethod.UPI], source: [TransactionSource.NFC, TransactionSource.SMS], mcc: '5912',
     items: () => [{ name: 'Dolo 650 (15 tabs)', qty: 1, unit: 32 }, { name: 'Cetirizine 10mg', qty: 1, unit: 28 }, { name: 'Vitamin D3 60k', qty: 4, unit: 45 }] },
   { name: 'BESCOM', min: 1200, max: 2600, freq: 1, method: [PaymentMethod.UPI], source: [TransactionSource.SMS] },
@@ -99,17 +95,19 @@ const MERCHANTS: MerchantProfile[] = [
   { name: 'Cult.fit', min: 1500, max: 1500, freq: 1, method: [PaymentMethod.CARD], source: [TransactionSource.SMS] },
 ];
 
-function occurredAtDaysAgo(days: number): Date {
-  const d = new Date();
-  d.setUTCDate(d.getUTCDate() - days);
-  d.setUTCHours(between(3, 16), between(0, 59), 0, 0); // 08:30–21:30 IST
-  return d;
-}
-
-async function main() {
-  const ds = new DataSource({ ...buildDataSourceOptions(cfg), synchronize: cfg.DB_DRIVER === 'sqljs' || cfg.DB_SYNCHRONIZE });
-  await ds.initialize();
-  console.log(`Seeding (${cfg.DB_DRIVER})…`);
+/** Seeds (or re-seeds) the demo dataset. Returns the transaction count. */
+export async function seedDemo(ds: DataSource, cfg: Pick<AppConfig, 'ENCRYPTION_KEY'>, log: (msg: string) => void = console.log): Promise<number> {
+  // Deterministic PRNG so the demo looks the same on every machine.
+  let seed = 20260917;
+  const rand = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const pick = <T>(arr: readonly T[]) => arr[Math.floor(rand() * arr.length)];
+  const between = (lo: number, hi: number) => lo + Math.floor(rand() * (hi - lo + 1));
+  const occurredAtDaysAgo = (days: number) => {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - days);
+    d.setUTCHours(between(3, 16), between(0, 59), 0, 0); // 08:30–21:30 IST
+    return d;
+  };
 
   const users = ds.getRepository(UserEntity);
   const households = ds.getRepository(HouseholdEntity);
@@ -119,7 +117,6 @@ async function main() {
   const connections = ds.getRepository(ConnectionEntity);
   const terminals = ds.getRepository(PosTerminalEntity);
 
-  // Categories (mirrors CategoriesService.onModuleInit so the seed works on a cold DB).
   const catBySlug = new Map<CategorySlug, CategoryEntity>();
   for (const [i, def] of CATEGORY_CATALOG.entries()) {
     let c = await categories.findOne({ where: { slug: def.slug } });
@@ -128,9 +125,7 @@ async function main() {
     catBySlug.set(def.slug, await categories.save(c));
   }
 
-  // Wipe previous demo data.
-  const demoEmails = ['demo@tapntally.app', 'priya@tapntally.app'];
-  for (const email of demoEmails) {
+  for (const email of DEMO_EMAILS) {
     const u = await users.findOne({ where: { email } });
     if (u) {
       await txs.delete({ userId: u.id });
@@ -144,7 +139,6 @@ async function main() {
     }
   }
 
-  // Household + users
   const household = await households.save(households.create({ name: 'The Sharmas', inviteCode: 'DEMO42' }));
   const demo = await users.save(
     users.create({
@@ -161,15 +155,13 @@ async function main() {
     }),
   );
 
-  // Demo terminal with a known secret so the mobile mock can sign bills.
   let terminal = await terminals.findOne({ where: { network: 'demo', terminalId: 'DEMO-001' } });
   if (!terminal) terminal = terminals.create({ network: 'demo', terminalId: 'DEMO-001', active: true, billsReceived: 0 });
   terminal.merchantName = 'Vidyarthi Bhavan';
   terminal.merchantGstin = null;
-  terminal.encryptedSecret = encrypt(DEMO_TERMINAL_SECRET);
+  terminal.encryptedSecret = encryptWith(cfg.ENCRYPTION_KEY, DEMO_TERMINAL_SECRET);
   await terminals.save(terminal);
 
-  // Transactions: ~75 days of history for Arjun, ~40 for Priya.
   const weighted = MERCHANTS.flatMap((m) => Array<MerchantProfile>(m.freq).fill(m));
   let count = 0;
   for (const [user, days, perDay] of [[demo, 75, 1.1], [priya, 40, 0.7]] as const) {
@@ -178,7 +170,7 @@ async function main() {
       for (let i = 0; i < n; i++) {
         const m = pick(weighted);
         const source = pick(m.source);
-        const items = source === TransactionSource.NFC && m.items ? m.items() : [];
+        const items = source === TransactionSource.NFC && m.items ? m.items(between) : [];
         const itemsPaise = items.map((it) => ({ name: it.name, qty: it.qty, unitPaise: it.unit * 100, totalPaise: it.qty * it.unit * 100 }));
         const amountPaise = itemsPaise.length ? itemsPaise.reduce((s, it) => s + it.totalPaise, 0) : between(m.min, m.max) * 100;
         const cat = categorize({ merchant: m.name, itemNames: items.map((it) => it.name), mcc: source === TransactionSource.NFC ? m.mcc : undefined });
@@ -202,7 +194,6 @@ async function main() {
     }
   }
 
-  // Budgets
   const b = (scope: BudgetScope, ownerId: string, slug: CategorySlug, rupees: number) =>
     budgets.save(budgets.create({ scope, ownerId, categoryId: catBySlug.get(slug)!.id, limitPaise: rupees * 100, period: BudgetPeriod.MONTHLY, alertThreshold: 0.8, lastAlertedPeriod: null }));
   await b(BudgetScope.USER, demo.id, CategorySlug.RESTAURANTS, 6000);
@@ -212,15 +203,35 @@ async function main() {
   await b(BudgetScope.HOUSEHOLD, household.id, CategorySlug.GROCERIES, 12000);
   await b(BudgetScope.HOUSEHOLD, household.id, CategorySlug.BILLS_UTILITIES, 5000);
 
-  // Connections
   await connections.save(connections.create({ userId: demo.id, type: ConnectionType.SMS, status: ConnectionStatus.ACTIVE, importedCount: 30, consecutiveFailures: 0, lastSyncedAt: new Date() }));
 
-  console.log(`Seeded: 2 users, 1 household, ${count} transactions, 6 budgets, 1 demo terminal.`);
-  console.log('Dev login:  POST /api/v1/auth/dev {"email":"demo@tapntally.app"}');
-  await ds.destroy();
+  log(`Seeded: 2 users, 1 household, ${count} transactions, 6 budgets, 1 demo terminal.`);
+  return count;
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+/** Runtime hook: seed once per process when DEMO_AUTOSEED is on and the demo user is absent. */
+export async function maybeAutoseed(app: INestApplicationContext, logger: LoggerService): Promise<void> {
+  const cfg = loadConfig();
+  if (!cfg.DEMO_AUTOSEED) return;
+  const ds = app.get(DataSource);
+  const exists = await ds.getRepository(UserEntity).findOne({ where: { email: DEMO_EMAILS[0] } });
+  if (exists) return;
+  await seedDemo(ds, cfg, (m) => logger.log(m));
+}
+
+// ---- CLI ----
+if (require.main === module) {
+  loadDotenv({ path: ['.env', '.env.example'] });
+  const cfg = loadConfig();
+  (async () => {
+    const ds = new DataSource({ ...buildDataSourceOptions(cfg), synchronize: cfg.DB_DRIVER === 'sqljs' || cfg.DB_SYNCHRONIZE });
+    await ds.initialize();
+    console.log(`Seeding (${cfg.DB_DRIVER})…`);
+    await seedDemo(ds, cfg);
+    console.log('Dev login:  POST /api/v1/auth/dev {"email":"demo@tapntally.app"}');
+    await ds.destroy();
+  })().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

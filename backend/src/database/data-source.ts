@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { config as loadDotenv } from 'dotenv';
 import { DataSource, DataSourceOptions } from 'typeorm';
@@ -32,6 +32,16 @@ export function buildDataSourceOptions(cfg: AppConfig): DataSourceOptions {
     };
   }
 
+  // sql.js loads its wasm relative to the package; on serverless the build copies it next to dist/.
+  const sqlJsConfig = existsSync(resolve(__dirname, '..', 'sql-wasm.wasm'))
+    ? { locateFile: () => resolve(__dirname, '..', 'sql-wasm.wasm') }
+    : undefined;
+
+  if (cfg.DB_SQLJS_FILE === ':memory:') {
+    // Ephemeral DB (hosted demo). Schema is synced and data re-seeded on each cold start.
+    return { ...common, type: 'sqljs', synchronize: true, sqlJsConfig };
+  }
+
   const file = resolve(process.cwd(), cfg.DB_SQLJS_FILE);
   mkdirSync(dirname(file), { recursive: true });
   return {
@@ -40,6 +50,7 @@ export function buildDataSourceOptions(cfg: AppConfig): DataSourceOptions {
     location: file,
     autoSave: true,
     synchronize: cfg.DB_SYNCHRONIZE || cfg.NODE_ENV !== 'production',
+    sqlJsConfig,
   };
 }
 

@@ -24,7 +24,13 @@ export class ApiClientError extends Error {
 }
 
 function resolveBaseUrl(): string {
-  const configured = (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl ?? 'http://localhost:3000/api/v1';
+  const extra = (Constants.expoConfig?.extra ?? {}) as { apiUrl?: string; apiUrlProd?: string };
+  // A hosted web build (anything not on localhost) talks to the hosted API.
+  const hostedWeb =
+    Platform.OS === 'web' && typeof globalThis.location !== 'undefined' && !/^(localhost|127\.|10\.|192\.168\.)/.test(globalThis.location.hostname);
+  // Build-time override (Vercel / EAS env) wins over app.json.
+  const configured =
+    process.env.EXPO_PUBLIC_API_URL ?? (hostedWeb ? extra.apiUrlProd : undefined) ?? extra.apiUrl ?? 'http://localhost:3000/api/v1';
   // Android emulator maps the host machine's localhost to 10.0.2.2.
   if (Platform.OS === 'android' && configured.includes('localhost')) return configured.replace('localhost', '10.0.2.2');
   // On a physical device, Expo exposes the dev machine's LAN IP via hostUri.

@@ -46,6 +46,21 @@ const schema = z.object({
   FIREBASE_SERVICE_ACCOUNT_PATH: z.string().optional().default(''),
 
   INTERNAL_API_KEY: z.string().min(8),
+
+  /**
+   * Hosted-demo switch: relaxes the production guards below so a public pitch
+   * demo can run dev login + an in-memory database on serverless hosting.
+   * Never enable for real users.
+   */
+  DEMO_MODE: z
+    .string()
+    .transform((v) => v === 'true')
+    .default('false'),
+  /** Seed the demo dataset on boot when the demo user is missing (used with :memory: DBs). */
+  DEMO_AUTOSEED: z
+    .string()
+    .transform((v) => v === 'true')
+    .default('false'),
 });
 
 export type AppConfig = z.infer<typeof schema>;
@@ -57,7 +72,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     throw new Error(`Invalid environment configuration:\n${issues}`);
   }
   const cfg = parsed.data;
-  if (cfg.NODE_ENV === 'production') {
+  if (cfg.NODE_ENV === 'production' && !cfg.DEMO_MODE) {
     if (cfg.AUTH_DEV_LOGIN) throw new Error('AUTH_DEV_LOGIN must be false in production');
     if (cfg.DB_SYNCHRONIZE) throw new Error('DB_SYNCHRONIZE must be false in production');
     if (cfg.DB_DRIVER !== 'postgres') throw new Error('DB_DRIVER must be postgres in production');

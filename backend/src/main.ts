@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { AppConfigService } from './config/app-config.service';
+import { maybeAutoseed } from './database/seed';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -36,6 +37,7 @@ async function bootstrap() {
 
   const port = config.get('PORT');
   await app.listen(port);
+  await maybeAutoseed(app, logger);
   logger.log(`TapNTally API listening on http://localhost:${port}  (driver=${config.get('DB_DRIVER')})`);
   if (!config.isProd) logger.log(`Swagger UI at http://localhost:${port}/docs`);
 }

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { google, gmail_v1 } from 'googleapis';
+import { auth as googleAuth, gmail, type gmail_v1 } from '@googleapis/gmail';
 import { AppConfigService } from '../../config/app-config.service';
 import { htmlToText } from './parsing/gmail-parser';
 
@@ -8,6 +8,9 @@ import { htmlToText } from './parsing/gmail-parser';
  * would be narrower still, but it forbids the `q` search parameter we rely
  * on to fetch *only* purchase emails — so `readonly` is the least privilege
  * that still lets us avoid scanning the whole inbox.
+ *
+ * Uses the per-API `@googleapis/gmail` package (a few MB) rather than the
+ * monolithic `googleapis` (~130 MB) so the API fits in a serverless function.
  */
 export const GMAIL_SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
 
@@ -37,10 +40,10 @@ export class GmailClient {
   constructor(private readonly config: AppConfigService) {}
 
   private oauth(tokens?: GmailTokens, onTokens?: (t: GmailTokens) => void) {
-    const client = new google.auth.OAuth2(
+    const client = new googleAuth.OAuth2(
       this.config.get('GOOGLE_CLIENT_ID'),
       this.config.get('GOOGLE_CLIENT_SECRET'),
-      // Mobile (PKCE) flows use a loopback/scheme redirect; the code exchange ignores it server-side.
+      // Mobile (native SDK) server auth codes exchange against this redirect.
       'postmessage',
     );
     if (tokens) client.setCredentials(tokens);
@@ -67,7 +70,7 @@ export class GmailClient {
   }
 
   private api(tokens: GmailTokens, onTokens?: (t: GmailTokens) => void): gmail_v1.Gmail {
-    return google.gmail({ version: 'v1', auth: this.oauth(tokens, onTokens) });
+    return gmail({ version: 'v1', auth: this.oauth(tokens, onTokens) });
   }
 
   async profile(tokens: GmailTokens, onTokens?: (t: GmailTokens) => void): Promise<{ emailAddress: string; historyId: string }> {
