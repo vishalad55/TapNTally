@@ -8,7 +8,7 @@ import { Icon } from '../src/theme/icons';
 /**
  * Pairing code for terminals that cannot write NFC. The cashier types the
  * code (or scans it, in partner software) and the terminal posts the bill to
- * this account through the partner API. One code, one bill, ten minutes.
+ * this account through the partner API. One code, one bill, five minutes.
  */
 export default function Pair() {
   const t = useTheme();
@@ -60,7 +60,7 @@ export default function Pair() {
         <Step n={2} text="Read out or show this code; the cashier enters it on the terminal." />
         <Step n={3} text="The bill appears on your Home screen within a few seconds." />
         <Text variant="caption" faint>
-          Each code works once and expires after ten minutes. Terminals that support tap don't need a code at all.
+          Each code works once and expires after five minutes. Terminals that support tap don't need a code at all.
         </Text>
       </Card>
     </ScrollView>

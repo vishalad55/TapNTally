@@ -104,7 +104,7 @@ function Welcome({ name, onNext }: { name?: string; onNext: () => void }) {
 function Sources({ onNext, onConnect }: { onNext: () => void; onConnect: () => void }) {
   const t = useTheme();
   return (
-    <View style={{ flex: 1, justifyContent: 'center', gap: 16, paddingVertical: 24 }}>
+    <View style={{ flex: 1, gap: 16, paddingTop: 28, paddingBottom: 24 }}>
       <Text variant="micro" faint>
         Step 2 of 3
       </Text>
@@ -166,7 +166,7 @@ function HouseholdStep({ onDone }: { onDone: () => void }) {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', gap: 16, paddingVertical: 24 }}>
+    <View style={{ flex: 1, gap: 16, paddingTop: 28, paddingBottom: 24 }}>
       <Text variant="micro" faint>
         Step 3 of 3
       </Text>
