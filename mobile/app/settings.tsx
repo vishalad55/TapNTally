@@ -1,4 +1,4 @@
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, Switch, View } from 'react-native';
 import { API_BASE_URL } from '../src/api/client';
 import { useUpdateMe } from '../src/api/hooks';
@@ -6,18 +6,19 @@ import { Button, Card, Chip, Row, SectionHeader, Text } from '../src/components/
 import { useNfcPrefs, type MockScenario } from '../src/nfc';
 import { useSession } from '../src/store/session';
 import { type AppearanceMode, useAppearance, useTheme } from '../src/theme';
+import { Icon, type IoniconName } from '../src/theme/icons';
 
 const SCENARIOS: Array<{ key: MockScenario; label: string }> = [
-  { key: 'signed', label: '✅ Signed bill' },
-  { key: 'unsigned', label: '📝 Unsigned bill' },
-  { key: 'no_tag', label: '🙈 Missed tap' },
-  { key: 'unsupported', label: '🚫 Unsupported terminal' },
-  { key: 'malformed', label: '💥 Malformed bill' },
+  { key: 'signed', label: 'Signed bill' },
+  { key: 'unsigned', label: 'Unsigned bill' },
+  { key: 'no_tag', label: 'Missed tap' },
+  { key: 'unsupported', label: 'Unsupported terminal' },
+  { key: 'malformed', label: 'Malformed bill' },
 ];
-const APPEARANCES: Array<{ key: AppearanceMode; label: string }> = [
-  { key: 'system', label: '📱 System' },
-  { key: 'light', label: '☀️ Paper' },
-  { key: 'dark', label: '🌙 Arcade' },
+const APPEARANCES: Array<{ key: AppearanceMode; label: string; icon: IoniconName }> = [
+  { key: 'system', label: 'System', icon: 'phone-portrait-outline' },
+  { key: 'light', label: 'Paper', icon: 'sunny-outline' },
+  { key: 'dark', label: 'Arcade', icon: 'moon-outline' },
 ];
 
 export default function Settings() {
@@ -54,7 +55,7 @@ export default function Settings() {
       <SectionHeader title="Appearance" />
       <Row gap={8}>
         {APPEARANCES.map((a) => (
-          <Chip key={a.key} label={a.label} selected={appearance.mode === a.key} onPress={() => appearance.setMode(a.key)} />
+          <Chip key={a.key} icon={a.icon} label={a.label} selected={appearance.mode === a.key} onPress={() => appearance.setMode(a.key)} />
         ))}
       </Row>
       <Text variant="caption" muted>
@@ -62,21 +63,19 @@ export default function Settings() {
       </Text>
 
       <SectionHeader title="Connections" />
-      <Link href="/connections" asChild>
-        <Pressable>
-          <Card>
-            <Row style={{ justifyContent: 'space-between' }}>
-              <View style={{ flex: 1 }}>
-                <Text variant="heading">Gmail & SMS</Text>
-                <Text variant="caption" muted>
-                  Pull in online orders automatically.
-                </Text>
-              </View>
-              <Text muted>›</Text>
-            </Row>
-          </Card>
-        </Pressable>
-      </Link>
+      <Pressable onPress={() => router.push('/connections')}>
+        <Card>
+          <Row style={{ justifyContent: 'space-between' }}>
+            <View style={{ flex: 1 }}>
+              <Text variant="heading">Gmail & SMS</Text>
+              <Text variant="caption" muted>
+                Pull in online orders automatically.
+              </Text>
+            </View>
+            <Icon name="chevron-forward" color={t.colors.inkFaint} />
+          </Row>
+        </Card>
+      </Pressable>
 
       <SectionHeader title="Privacy" />
       <Card style={{ gap: 8 }}>
@@ -91,7 +90,7 @@ export default function Settings() {
         </Text>
       </Card>
 
-      <SectionHeader title="NFC" />
+      <SectionHeader title="Tap to pay terminal" />
       <Card style={{ gap: 10 }}>
         <Text variant="caption" muted>
           "Auto" uses the phone's NFC when available and falls back to the demo terminal otherwise.
@@ -125,7 +124,7 @@ export default function Settings() {
         </Text>
       </Card>
 
-      <Button title="Sign out" variant="secondary" onPress={async () => { await signOut(); router.replace('/(auth)/sign-in'); }} style={{ marginTop: 12 }} />
+      <Button title="Sign out" icon="log-out-outline" variant="secondary" onPress={async () => { await signOut(); router.replace('/(auth)/sign-in'); }} style={{ marginTop: 12 }} />
     </ScrollView>
   );
 }

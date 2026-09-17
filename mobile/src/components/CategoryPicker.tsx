@@ -2,6 +2,7 @@ import type { Category } from '@tapntally/shared';
 import { Pressable, View } from 'react-native';
 import { useCategories } from '../api/hooks';
 import { useTheme } from '../theme';
+import { Icon, categoryIconName } from '../theme/icons';
 import { Loading, Text } from './ui';
 
 /** Grid of category tiles. Used for overrides, manual entry and budgets. */
@@ -31,7 +32,7 @@ export function CategoryPicker({ value, onChange, compact }: { value: string | n
               opacity: pressed ? 0.8 : 1,
             })}
           >
-            <Text style={{ fontSize: compact ? 16 : 20 }}>{c.icon}</Text>
+            <Icon name={categoryIconName(c.slug)} size={compact ? 16 : 20} color={selected ? c.color : t.colors.inkMuted} />
             <Text variant={selected ? 'heading' : 'caption'} style={{ flex: 1 }} numberOfLines={1}>
               {c.name}
             </Text>

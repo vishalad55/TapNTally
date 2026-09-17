@@ -3,6 +3,7 @@ import { CategoryConfidence, TransactionSource, formatPaise } from '@tapntally/s
 import { format, isToday, isYesterday } from 'date-fns';
 import { Pressable, View } from 'react-native';
 import { useTheme } from '../theme';
+import { CategoryTile } from '../theme/icons';
 import { Badge, Row, Sticker, Text } from './ui';
 
 export { Badge } from './ui';
@@ -38,18 +39,7 @@ export function TransactionRow({ tx, onPress, showShared = true }: { tx: Transac
         backgroundColor: pressed ? t.colors.surfaceAlt : 'transparent',
       })}
     >
-      <View
-        style={{
-          width: 48,
-          height: 48,
-          borderRadius: 16,
-          backgroundColor: tx.category.color + (t.dark ? '33' : '22'),
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Text style={{ fontSize: 22 }}>{tx.category.icon}</Text>
-      </View>
+      <CategoryTile slug={tx.category.slug} color={tx.category.color} />
       <View style={{ flex: 1, gap: 3 }}>
         <Text variant="heading" numberOfLines={1}>
           {tx.merchant}
@@ -60,7 +50,7 @@ export function TransactionRow({ tx, onPress, showShared = true }: { tx: Transac
           </Text>
           {needsCheck ? (
             <Text variant="caption" color={t.colors.warn}>
-              · check?
+              · Review
             </Text>
           ) : null}
           <Text variant="caption" faint numberOfLines={1}>

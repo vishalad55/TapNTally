@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Animated, Easing, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fonts, useTheme } from '../theme';
+import { TapGlyph } from '../theme/icons';
 import { Text } from './ui';
 
 /**
@@ -15,9 +16,7 @@ export function NfcFab({ onPress, active }: { onPress: () => void; active?: bool
 
   useEffect(() => {
     halo.setValue(0);
-    const loop = Animated.loop(
-      Animated.timing(halo, { toValue: 1, duration: active ? 1100 : 2200, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-    );
+    const loop = Animated.loop(Animated.timing(halo, { toValue: 1, duration: active ? 1100 : 2200, easing: Easing.out(Easing.quad), useNativeDriver: true }));
     loop.start();
     return () => loop.stop();
   }, [halo, active]);
@@ -27,18 +26,7 @@ export function NfcFab({ onPress, active }: { onPress: () => void; active?: bool
 
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: 58 + insets.bottom, alignItems: 'center' }}>
-      <Animated.View
-        pointerEvents="none"
-        style={{
-          position: 'absolute',
-          width: 76,
-          height: 76,
-          borderRadius: 38,
-          backgroundColor: t.colors.accent,
-          opacity: haloOpacity,
-          transform: [{ scale: haloScale }],
-        }}
-      />
+      <Animated.View pointerEvents="none" style={{ position: 'absolute', width: 76, height: 76, borderRadius: 38, backgroundColor: t.colors.accent, opacity: haloOpacity, transform: [{ scale: haloScale }] }} />
       <Pressable
         onPress={onPress}
         accessibilityLabel="Tap to get bill"
@@ -59,8 +47,10 @@ export function NfcFab({ onPress, active }: { onPress: () => void; active?: bool
           borderColor: t.colors.bg,
         })}
       >
-        <Text style={{ fontSize: 24, marginTop: -2 }}>📡</Text>
-        <Text style={{ fontFamily: fonts.display, fontSize: 11, letterSpacing: 1.2, color: t.colors.accentInk }}>TAP</Text>
+        <TapGlyph size={28} color={t.colors.accentInk} />
+        <Text style={{ fontFamily: fonts.display, fontSize: 10, letterSpacing: 1.2, marginTop: 1 }} color={t.colors.accentInk}>
+          TAP
+        </Text>
       </Pressable>
     </View>
   );

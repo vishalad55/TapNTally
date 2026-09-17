@@ -6,6 +6,7 @@ import { ThemeToggle } from '../../src/components/ThemeToggle';
 import { Button, Card, Row, Screen, Spacer, Text } from '../../src/components/ui';
 import { useSession } from '../../src/store/session';
 import { fonts, useTheme } from '../../src/theme';
+import { TapGlyph } from '../../src/theme/icons';
 
 const GOOGLE_WEB_CLIENT_ID = (Constants.expoConfig?.extra as { googleWebClientId?: string } | undefined)?.googleWebClientId ?? '';
 
@@ -28,7 +29,7 @@ export default function SignIn() {
     try {
       await fn();
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Something went wrong. Is the API running?');
+      setError(err instanceof ApiClientError ? err.message : 'Something went wrong. Please try again.');
     } finally {
       setBusy(null);
     }
@@ -54,7 +55,7 @@ export default function SignIn() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, justifyContent: 'center', gap: 16 }}>
         <View style={{ gap: 10, marginBottom: 8 }}>
           <View style={{ width: 72, height: 72, borderRadius: 24, backgroundColor: t.colors.accent, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-6deg' }] }}>
-            <Text style={{ fontSize: 36 }}>📡</Text>
+            <TapGlyph size={40} color={t.colors.accentInk} />
           </View>
           <Text variant="hero" style={{ marginTop: 8 }}>
             Tap.{'\n'}Tally.{'\n'}
@@ -67,18 +68,15 @@ export default function SignIn() {
           </Text>
         </View>
 
-        <Card style={{ gap: 10 }}>
-          <Button title="Continue with Google" icon="🔐" onPress={googleSignIn} loading={busy === 'google'} disabled={!GOOGLE_WEB_CLIENT_ID} />
-          {!GOOGLE_WEB_CLIENT_ID ? (
-            <Text variant="caption" faint style={{ textAlign: 'center' }}>
-              Google sign-in needs a client ID in app.json → extra.googleWebClientId
-            </Text>
-          ) : null}
-        </Card>
+        {GOOGLE_WEB_CLIENT_ID ? (
+          <Card style={{ gap: 10 }}>
+            <Button title="Continue with Google" icon="logo-google" onPress={googleSignIn} loading={busy === 'google'} />
+          </Card>
+        ) : null}
 
-        <Card tone="alt" style={{ gap: 10 }}>
+        <Card tone={GOOGLE_WEB_CLIENT_ID ? 'alt' : 'surface'} style={{ gap: 10 }}>
           <Text variant="micro" muted>
-            Demo sign-in
+            {GOOGLE_WEB_CLIENT_ID ? 'Or use a demo account' : 'Demo account'}
           </Text>
           <TextInput
             value={email}
@@ -87,11 +85,11 @@ export default function SignIn() {
             keyboardType="email-address"
             placeholder="you@example.com"
             placeholderTextColor={t.colors.inkFaint}
-            style={{ borderRadius: t.radius.md, padding: 14, color: t.colors.ink, backgroundColor: t.colors.surface, fontFamily: fonts.body, fontSize: 15 }}
+            style={{ borderRadius: t.radius.md, padding: 14, color: t.colors.ink, backgroundColor: t.colors.surfaceAlt, fontFamily: fonts.body, fontSize: 15 }}
           />
-          <Button title="Sign in" onPress={() => run('dev', () => signInDev(email.trim()))} loading={busy === 'dev'} />
+          <Button title="Continue" icon="arrow-forward" onPress={() => run('dev', () => signInDev(email.trim()))} loading={busy === 'dev'} />
           <Text variant="caption" faint>
-            Try demo@tapntally.app or priya@tapntally.app.
+            Try demo@tapntally.app or priya@tapntally.app — a seeded household with two months of purchases.
           </Text>
         </Card>
 

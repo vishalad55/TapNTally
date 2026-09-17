@@ -1,12 +1,15 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import type { ColorValue } from 'react-native';
 import { TapFlow } from '../../src/components/TapFlow';
 import { useSession } from '../../src/store/session';
 import { fonts, useTheme } from '../../src/theme';
+import type { IoniconName } from '../../src/theme/icons';
 
-const icon = (glyph: string) => ({ focused }: { focused: boolean }) => (
-  <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.45 }}>{glyph}</Text>
-);
+const icon = (outline: IoniconName, filled: IoniconName) =>
+  function TabIcon({ focused, color }: { focused: boolean; color: ColorValue }) {
+    return <Ionicons name={focused ? filled : outline} size={22} color={color as string} />;
+  };
 
 export default function TabsLayout() {
   const t = useTheme();
@@ -31,12 +34,12 @@ export default function TabsLayout() {
           sceneStyle: { backgroundColor: t.colors.bg },
         }}
       >
-        <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: icon('🏠') }} />
-        <Tabs.Screen name="history" options={{ title: 'History', tabBarIcon: icon('🧾') }} />
+        <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: icon('home-outline', 'home') }} />
+        <Tabs.Screen name="history" options={{ title: 'History', tabBarIcon: icon('receipt-outline', 'receipt') }} />
         <Tabs.Screen name="tap-spacer" options={{ title: '', tabBarButton: () => null }} />
-        <Tabs.Screen name="budgets" options={{ title: 'Budgets', tabBarIcon: icon('🎯') }} />
-        <Tabs.Screen name="insights" options={{ title: 'Recap', tabBarIcon: icon('✨') }} />
-        <Tabs.Screen name="family" options={{ title: 'Family', tabBarIcon: icon('👨‍👩‍👧') }} />
+        <Tabs.Screen name="budgets" options={{ title: 'Budgets', tabBarIcon: icon('pie-chart-outline', 'pie-chart') }} />
+        <Tabs.Screen name="insights" options={{ title: 'Recap', tabBarIcon: icon('sparkles-outline', 'sparkles') }} />
+        <Tabs.Screen name="family" options={{ title: 'Family', tabBarIcon: icon('people-outline', 'people') }} />
       </Tabs>
       <TapFlow />
     </>

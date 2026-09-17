@@ -108,8 +108,8 @@ export class BudgetsService implements OnModuleInit {
       const cat = b.category.name;
       const message =
         progress.status === 'exceeded'
-          ? { title: `${b.category.icon} ${cat} budget crossed`, body: `You've spent ${formatPaise(progress.spentPaise, { showDecimals: false })} of your ${formatPaise(b.limitPaise, { showDecimals: false })} ${b.period} budget.` }
-          : { title: `${b.category.icon} ${pct}% of your ${cat} budget used`, body: `${formatPaise(b.limitPaise - progress.spentPaise, { showDecimals: false })} left for the rest of the ${b.period === BudgetPeriod.WEEKLY ? 'week' : 'month'}.` };
+          ? { title: `${cat} budget crossed`, body: `You've spent ${formatPaise(progress.spentPaise, { showDecimals: false })} of your ${formatPaise(b.limitPaise, { showDecimals: false })} ${b.period} budget.` }
+          : { title: `${pct}% of your ${cat} budget used`, body: `${formatPaise(b.limitPaise - progress.spentPaise, { showDecimals: false })} left for the rest of the ${b.period === BudgetPeriod.WEEKLY ? 'week' : 'month'}.` };
 
       const recipients =
         b.scope === BudgetScope.USER

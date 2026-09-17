@@ -50,11 +50,11 @@ export class InsightsService {
 
     const headline = buildHeadline(cur.totalPaise, changeRatio, label);
     const highlights: string[] = [];
-    if (biggestIncrease) highlights.push(`${biggestIncrease.category.icon} ${biggestIncrease.category.name} climbed by ${fmt(biggestIncrease.deltaPaise)}. Worth a look?`);
-    if (biggestSaving) highlights.push(`${biggestSaving.category.icon} You trimmed ${fmt(-biggestSaving.deltaPaise)} off ${biggestSaving.category.name}. Nice.`);
-    if (topMerchant && topMerchant.count > 1) highlights.push(`🏪 ${topMerchant.merchant} saw you ${topMerchant.count} times — ${fmt(topMerchant.amountPaise)} in total.`);
-    if (priciest) highlights.push(`💸 Biggest single splurge: ${fmt(priciest.amountPaise)} at ${priciest.merchant}.`);
-    if (cur.byCategory[0]) highlights.push(`${cur.byCategory[0].category.icon} ${cur.byCategory[0].category.name} took the biggest slice at ${Math.round(cur.byCategory[0].share * 100)}%.`);
+    if (biggestIncrease) highlights.push(`${biggestIncrease.category.name} climbed by ${fmt(biggestIncrease.deltaPaise)}. Worth a look?`);
+    if (biggestSaving) highlights.push(`You trimmed ${fmt(-biggestSaving.deltaPaise)} off ${biggestSaving.category.name}. Nice.`);
+    if (topMerchant && topMerchant.count > 1) highlights.push(`${topMerchant.merchant} saw you ${topMerchant.count} times — ${fmt(topMerchant.amountPaise)} in total.`);
+    if (priciest) highlights.push(`Biggest single purchase: ${fmt(priciest.amountPaise)} at ${priciest.merchant}.`);
+    if (cur.byCategory[0]) highlights.push(`${cur.byCategory[0].category.name} took the biggest slice at ${Math.round(cur.byCategory[0].share * 100)}%.`);
     if (highlights.length === 0) highlights.push(`Nothing recorded this ${label} yet. Tap a terminal or connect Gmail to get started.`);
 
     return {
@@ -79,7 +79,7 @@ function buildHeadline(total: number, change: number | null, label: string): str
   if (change === null) return `You spent ${fmt(total)} this ${label}. First one on the books!`;
   const pct = Math.round(Math.abs(change) * 100);
   if (pct < 3) return `${fmt(total)} this ${label} — almost exactly like last ${label}. Consistency!`;
-  if (change < 0) return `${fmt(total)} this ${label}, ${pct}% less than last ${label}. Chef's kiss. 👌`;
+  if (change < 0) return `${fmt(total)} this ${label}, ${pct}% less than last ${label}. Nicely done.`;
   if (pct > 40) return `${fmt(total)} this ${label} — ${pct}% up on last ${label}. Big ${label}?`;
   return `${fmt(total)} this ${label}, ${pct}% more than last ${label}. Keep an eye on it.`;
 }

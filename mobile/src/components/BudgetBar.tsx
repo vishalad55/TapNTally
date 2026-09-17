@@ -2,6 +2,7 @@ import type { BudgetProgress } from '@tapntally/shared';
 import { BudgetScope, formatPaise } from '@tapntally/shared';
 import { Pressable, View } from 'react-native';
 import { type Theme, useTheme } from '../theme';
+import { CategoryTile } from '../theme/icons';
 import { Card, Row, Sticker, Text } from './ui';
 
 /** Money-green → butter → coral as spend approaches the cap. */
@@ -20,9 +21,7 @@ export function BudgetBar({ progress, onPress }: { progress: BudgetProgress; onP
       <Card style={{ gap: 12 }}>
         <Row style={{ justifyContent: 'space-between' }}>
           <Row gap={10}>
-            <View style={{ width: 40, height: 40, borderRadius: 13, backgroundColor: budget.category.color + '26', alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 20 }}>{budget.category.icon}</Text>
-            </View>
+            <CategoryTile slug={budget.category.slug} color={budget.category.color} size={40} />
             <View>
               <Text variant="heading">{budget.category.name}</Text>
               <Text variant="caption" muted>
@@ -36,7 +35,6 @@ export function BudgetBar({ progress, onPress }: { progress: BudgetProgress; onP
 
         <View style={{ height: 12, borderRadius: 6, backgroundColor: t.colors.surfaceAlt, overflow: 'hidden' }}>
           <View style={{ width: `${Math.min(100, pct)}%`, height: '100%', backgroundColor: color, borderRadius: 6 }} />
-          {/* 80% tick */}
           <View style={{ position: 'absolute', left: `${budget.alertThreshold * 100}%`, top: 0, bottom: 0, width: 2, backgroundColor: t.colors.bg, opacity: 0.8 }} />
         </View>
 

@@ -9,6 +9,7 @@ import { friendlyDate } from '../../src/components/TransactionRow';
 import { Badge, Button, Card, Chip, ErrorBanner, Loading, Row, SectionHeader, Sticker, Text } from '../../src/components/ui';
 import { useSession } from '../../src/store/session';
 import { type Theme, fonts, useTheme } from '../../src/theme';
+import { CategoryTile } from '../../src/theme/icons';
 
 const METHODS: Array<{ key: PaymentMethod; label: string }> = [
   { key: PaymentMethod.UPI, label: 'UPI' },
@@ -18,7 +19,7 @@ const METHODS: Array<{ key: PaymentMethod; label: string }> = [
   { key: PaymentMethod.WALLET, label: 'Wallet' },
 ];
 
-/** Every purchase is editable; auto-categorisation is a first guess with a visible "check?" nudge. */
+/** Every purchase is editable; auto-categorisation is a first guess with a visible review nudge. */
 export default function TransactionDetail() {
   const t = useTheme();
   const router = useRouter();
@@ -82,9 +83,7 @@ export default function TransactionDetail() {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: t.colors.bg }} contentContainerStyle={{ padding: 20, gap: 10, paddingBottom: 80 }} keyboardShouldPersistTaps="handled">
       <Card style={{ alignItems: 'center', gap: 8, paddingVertical: 24 }}>
-        <View style={{ width: 64, height: 64, borderRadius: 20, backgroundColor: d.category.color + '26', alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontSize: 32 }}>{d.category.icon}</Text>
-        </View>
+        <CategoryTile slug={d.category.slug} color={d.category.color} size={64} />
         <Text variant="hero">{formatPaise(d.amountPaise)}</Text>
         <Text variant="heading">{d.merchant}</Text>
         <Text variant="caption" muted>

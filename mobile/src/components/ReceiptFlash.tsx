@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Svg, { Polygon } from 'react-native-svg';
 import { useTheme } from '../theme';
+import { Icon } from '../theme/icons';
 import { Row, Sticker, Text } from './ui';
 
 const FLASH_MS = 5500;
@@ -14,17 +15,7 @@ const FLASH_MS = 5500;
  * the itemised bill for ~5.5 s behind a draining timer bar, then auto-dismisses
  * back to the dashboard. Tap anywhere to close early; "Edit" jumps to the purchase.
  */
-export function ReceiptFlash({
-  tx,
-  verified,
-  onDone,
-  onEdit,
-}: {
-  tx: Transaction;
-  verified: boolean;
-  onDone: () => void;
-  onEdit: () => void;
-}) {
+export function ReceiptFlash({ tx, verified, onDone, onEdit }: { tx: Transaction; verified: boolean; onDone: () => void; onEdit: () => void }) {
   const t = useTheme();
   const slide = useRef(new Animated.Value(700)).current;
   const drain = useRef(new Animated.Value(1)).current;
@@ -54,19 +45,7 @@ export function ReceiptFlash({
       <View style={[StyleSheet.absoluteFill, { backgroundColor: t.colors.scrim }]} />
       <Animated.View
         onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
-        style={{
-          position: 'absolute',
-          left: 16,
-          right: 16,
-          bottom: 28,
-          maxHeight: '78%',
-          transform: [{ translateY: slide }],
-          shadowColor: '#000',
-          shadowOpacity: 0.35,
-          shadowRadius: 24,
-          shadowOffset: { width: 0, height: 12 },
-          elevation: 16,
-        }}
+        style={{ position: 'absolute', left: 16, right: 16, bottom: 28, maxHeight: '78%', transform: [{ translateY: slide }], shadowColor: '#000', shadowOpacity: 0.35, shadowRadius: 24, shadowOffset: { width: 0, height: 12 }, elevation: 16 }}
       >
         <Svg width={width} height={12} style={{ marginBottom: -1 }}>
           <Polygon points={tornEdge(width, 12)} fill={paper} />
@@ -79,12 +58,12 @@ export function ReceiptFlash({
             <Row style={{ justifyContent: 'space-between' }}>
               <Row gap={12}>
                 <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: t.colors.money + '22', alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ fontSize: 22, color: t.colors.money }}>✓</Text>
+                  <Icon name="checkmark" size={26} color={t.colors.money} />
                 </View>
                 <View>
                   <Text variant="title">Bill received</Text>
                   <Text variant="caption" muted>
-                    Filed under {tx.category.icon} {tx.category.name}
+                    Filed under {tx.category.name}
                   </Text>
                 </View>
               </Row>
@@ -120,9 +99,12 @@ export function ReceiptFlash({
                 Tap anywhere to close
               </Text>
               <Pressable onPress={() => finish(onEdit)} hitSlop={12}>
-                <Text variant="heading" color={t.colors.accent}>
-                  Edit category →
-                </Text>
+                <Row gap={4}>
+                  <Text variant="heading" color={t.colors.accent}>
+                    Edit category
+                  </Text>
+                  <Icon name="arrow-forward" size={16} color={t.colors.accent} />
+                </Row>
               </Pressable>
             </Row>
           </View>

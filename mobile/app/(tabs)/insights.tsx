@@ -36,10 +36,10 @@ export default function Insights() {
         <Row gap={8}>
           <Chip label="This month" selected={period === 'monthly'} onPress={() => setPeriod('monthly')} />
           <Chip label="This week" selected={period === 'weekly'} onPress={() => setPeriod('weekly')} />
-          {user?.householdId ? <Chip label="👨‍👩‍👧 Household" selected={scope === 'shared'} onPress={() => setScope(scope === 'shared' ? 'personal' : 'shared')} /> : null}
+          {user?.householdId ? <Chip icon="people-outline" label="Household" selected={scope === 'shared'} onPress={() => setScope(scope === 'shared' ? 'personal' : 'shared')} /> : null}
         </Row>
 
-        {recap.isLoading ? <Loading label="Crunching the numbers…" /> : null}
+        {recap.isLoading ? <Loading label="Crunching the numbers" /> : null}
         {recap.error ? <ErrorBanner message="Couldn't build your recap." onRetry={() => void recap.refetch()} /> : null}
 
         {r ? (

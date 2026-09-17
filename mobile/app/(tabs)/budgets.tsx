@@ -1,5 +1,5 @@
 import { BudgetScope } from '@tapntally/shared';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { useBudgets } from '../../src/api/hooks';
 import { BudgetBar } from '../../src/components/BudgetBar';
@@ -32,24 +32,18 @@ export default function Budgets() {
           <View>
             <Text variant="title">Budgets</Text>
             <Text variant="caption" muted>
-              Caps per category. We nudge you at 80 %.
+              Caps per category. We nudge you at 80%.
             </Text>
           </View>
-          <Link href="/budget-edit" asChild>
-            <Pressable>
-              <Button title="+ New" size="sm" />
-            </Pressable>
-          </Link>
+          <Button title="New" icon="add" size="sm" onPress={() => router.push('/budget-edit')} />
         </Row>
 
         {budgets.isLoading ? <Loading /> : null}
         {budgets.error ? <ErrorBanner message="Couldn't load budgets." onRetry={() => void budgets.refetch()} /> : null}
 
         {budgets.data && budgets.data.length === 0 ? (
-          <EmptyState icon="🎯" title="No budgets yet" body="Set a cap on eating out, shopping — anything you'd like a heads-up on.">
-            <Link href="/budget-edit" asChild>
-              <Button title="Set your first budget" />
-            </Link>
+          <EmptyState icon="pie-chart-outline" title="No budgets yet" body="Set a cap on eating out, shopping — anything you'd like a heads-up on.">
+            <Button title="Set your first budget" onPress={() => router.push('/budget-edit')} />
           </EmptyState>
         ) : null}
 
@@ -66,13 +60,11 @@ export default function Budgets() {
               eyebrow="Everyone"
               title="Household"
               right={
-                <Link href={{ pathname: '/budget-edit', params: { scope: BudgetScope.HOUSEHOLD } }} asChild>
-                  <Pressable hitSlop={8}>
-                    <Text variant="caption" color={t.colors.accent}>
-                      + Add
-                    </Text>
-                  </Pressable>
-                </Link>
+                <Pressable onPress={() => router.push({ pathname: '/budget-edit', params: { scope: BudgetScope.HOUSEHOLD } })} hitSlop={8}>
+                  <Text variant="caption" color={t.colors.accent}>
+                    Add
+                  </Text>
+                </Pressable>
               }
             />
             {household.length === 0 ? (

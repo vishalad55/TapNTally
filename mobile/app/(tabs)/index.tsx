@@ -1,5 +1,5 @@
 import { formatPaise } from '@tapntally/shared';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
@@ -7,9 +7,10 @@ import { useSummary, useTransactions } from '../../src/api/hooks';
 import { DonutChart, type DonutSelection } from '../../src/components/DonutChart';
 import { ThemeToggle } from '../../src/components/ThemeToggle';
 import { TransactionRow } from '../../src/components/TransactionRow';
-import { Card, Chip, EmptyState, ErrorBanner, Loading, Reveal, Row, Screen, Text } from '../../src/components/ui';
+import { Card, Chip, EmptyState, ErrorBanner, IconButton, Loading, Reveal, Row, Screen, Text } from '../../src/components/ui';
 import { useSession } from '../../src/store/session';
 import { useTheme } from '../../src/theme';
+import { categoryIconName } from '../../src/theme/icons';
 
 /**
  * Home: hero month total with a hand-drawn underline, the tappable donut that
@@ -37,7 +38,7 @@ export default function Home() {
       <Row style={{ justifyContent: 'space-between', marginTop: 10 }}>
         <Row gap={12}>
           <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: t.colors.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
-            <Text variant="title" color={t.dark ? t.colors.accent : t.colors.accent}>
+            <Text variant="title" color={t.colors.accent}>
               {initial}
             </Text>
           </View>
@@ -50,11 +51,7 @@ export default function Home() {
         </Row>
         <Row gap={8}>
           <ThemeToggle />
-          <Link href="/settings" asChild>
-            <Pressable hitSlop={10} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 18 }}>⚙️</Text>
-            </Pressable>
-          </Link>
+          <IconButton name="settings-outline" label="Settings" onPress={() => router.push('/settings')} />
         </Row>
       </Row>
 
@@ -93,11 +90,12 @@ export default function Home() {
             contentContainerStyle={{ gap: 8, paddingHorizontal: 4 }}
             renderItem={({ item }) => (
               <Chip
-                label={`${item.category.icon} ${item.category.name} · ${formatPaise(item.amountPaise, { showDecimals: false, compact: true })}`}
+                icon={categoryIconName(item.category.slug)}
+                label={`${item.category.name} · ${formatPaise(item.amountPaise, { showDecimals: false, compact: true })}`}
                 selected={sel?.categoryIds.length === 1 && sel.categoryIds[0] === item.category.id}
                 color={item.category.color}
                 onPress={() =>
-                  setSel(sel?.id === item.category.id ? null : { id: item.category.id, categoryIds: [item.category.id], label: item.category.name, icon: item.category.icon })
+                  setSel(sel?.id === item.category.id ? null : { id: item.category.id, categoryIds: [item.category.id], label: item.category.name, slug: item.category.slug })
                 }
               />
             )}
@@ -106,7 +104,7 @@ export default function Home() {
       </Card>
 
       <Row style={{ justifyContent: 'space-between', marginTop: 22, marginBottom: 6 }}>
-        <Text variant="title">{sel ? `${sel.icon} ${sel.label}` : 'Recent'}</Text>
+        <Text variant="title">{sel ? sel.label : 'Recent'}</Text>
         {sel ? (
           <Pressable onPress={() => setSel(null)} hitSlop={8}>
             <Text variant="caption" color={t.colors.accent}>
@@ -114,13 +112,11 @@ export default function Home() {
             </Text>
           </Pressable>
         ) : (
-          <Link href="/add-transaction" asChild>
-            <Pressable hitSlop={8}>
-              <Text variant="caption" color={t.colors.accent}>
-                + Add manually
-              </Text>
-            </Pressable>
-          </Link>
+          <Pressable onPress={() => router.push('/add-transaction')} hitSlop={8}>
+            <Text variant="caption" color={t.colors.accent}>
+              Add manually
+            </Text>
+          </Pressable>
         )}
       </Row>
     </View>
@@ -146,7 +142,7 @@ export default function Home() {
           ) : feed.error ? (
             <ErrorBanner message="Couldn't load transactions." onRetry={() => void feed.refetch()} />
           ) : (
-            <EmptyState icon="🧾" title={sel ? 'Nothing here yet' : 'No purchases yet'} body="Tap a terminal after paying, or connect Gmail and SMS to pull in your online orders." />
+            <EmptyState icon="receipt-outline" title={sel ? 'Nothing here yet' : 'No purchases yet'} body="Tap a terminal after paying, or connect Gmail and SMS to pull in your online orders." />
           )
         }
         ListFooterComponent={feed.isFetchingNextPage ? <Loading /> : <View style={{ height: 130 }} />}

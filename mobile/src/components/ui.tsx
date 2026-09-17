@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { type TypographyVariant, typography, useTheme } from '../theme';
+import { Icon, type IoniconName } from '../theme/icons';
 
 /** Themed text with named variants from the design system. */
 export function Text({
@@ -83,7 +84,7 @@ export function Button({
   title: string;
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   loading?: boolean;
-  icon?: string;
+  icon?: IoniconName;
   size?: 'sm' | 'md';
   style?: ViewStyle;
 }) {
@@ -112,11 +113,33 @@ export function Button({
           gap: 8,
         }}
       >
-        {loading ? <ActivityIndicator color={fg} /> : null}
-        {icon && !loading ? <RNText style={{ fontSize: 16 }}>{icon}</RNText> : null}
+        {loading ? <ActivityIndicator color={fg} /> : icon ? <Icon name={icon} size={18} color={fg} /> : null}
         <RNText style={[typography.heading, { color: fg }]}>{title}</RNText>
       </Pressable>
     </Animated.View>
+  );
+}
+
+/** Circular icon button (header actions). */
+export function IconButton({ name, onPress, label, size = 40 }: { name: IoniconName; onPress?: () => void; label: string; size?: number }) {
+  const t = useTheme();
+  return (
+    <Pressable
+      accessibilityLabel={label}
+      onPress={onPress}
+      hitSlop={8}
+      style={({ pressed }) => ({
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: t.colors.surfaceAlt,
+        alignItems: 'center',
+        justifyContent: 'center',
+        opacity: pressed ? 0.7 : 1,
+      })}
+    >
+      <Icon name={name} size={Math.round(size * 0.5)} />
+    </Pressable>
   );
 }
 
@@ -125,19 +148,25 @@ export function Chip({
   selected,
   onPress,
   color,
+  icon,
 }: {
   label: string;
   selected?: boolean;
   onPress?: () => void;
   color?: string;
+  icon?: IoniconName;
 }) {
   const t = useTheme();
   const accent = color ?? t.colors.accent;
   const onAccent = color ? '#FFFFFF' : t.colors.accentInk;
+  const fg = selected ? onAccent : t.colors.ink;
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
         paddingVertical: 8,
         paddingHorizontal: 14,
         borderRadius: t.radius.pill,
@@ -146,29 +175,22 @@ export function Chip({
         transform: [{ scale: pressed ? 0.97 : 1 }],
       })}
     >
-      <RNText style={[typography.caption, { color: selected ? onAccent : t.colors.ink }]}>{label}</RNText>
+      {icon ? <Icon name={icon} size={14} color={fg} /> : null}
+      <RNText style={[typography.caption, { color: fg }]}>{label}</RNText>
     </Pressable>
   );
 }
 
-/** Rotated pill label — the "sticker" motif for VERIFIED / SHARED / source badges. */
+/** Rotated pill label — the "sticker" motif for VERIFIED / SHARED badges. */
 export function Sticker({ label, color, tilt = -3 }: { label: string; color: string; tilt?: number }) {
   return (
-    <View
-      style={{
-        paddingHorizontal: 7,
-        paddingVertical: 3,
-        borderRadius: 6,
-        backgroundColor: color,
-        transform: [{ rotate: `${tilt}deg` }],
-      }}
-    >
+    <View style={{ paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, backgroundColor: color, transform: [{ rotate: `${tilt}deg` }] }}>
       <RNText style={[typography.micro, { color: contrastInk(color) }]}>{label}</RNText>
     </View>
   );
 }
 
-/** Flat pill for quieter labels (source badges). */
+/** Flat pill for quieter labels (source badges, statuses). */
 export function Badge({ label, color }: { label: string; color: string }) {
   return (
     <View style={{ paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, backgroundColor: color + '26' }}>
@@ -177,12 +199,12 @@ export function Badge({ label, color }: { label: string; color: string }) {
   );
 }
 
-export function EmptyState({ icon, title, body, children }: PropsWithChildren<{ icon: string; title: string; body?: string }>) {
+export function EmptyState({ icon, title, body, children }: PropsWithChildren<{ icon: IoniconName; title: string; body?: string }>) {
   const t = useTheme();
   return (
     <View style={{ alignItems: 'center', paddingVertical: t.spacing(10), paddingHorizontal: t.spacing(6), gap: 8 }}>
       <View style={{ width: 84, height: 84, borderRadius: 42, backgroundColor: t.colors.surfaceAlt, alignItems: 'center', justifyContent: 'center', marginBottom: 6 }}>
-        <RNText style={{ fontSize: 40 }}>{icon}</RNText>
+        <Icon name={icon} size={36} color={t.colors.inkMuted} />
       </View>
       <Text variant="title" style={{ textAlign: 'center' }}>
         {title}
@@ -211,7 +233,10 @@ export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: (
   const t = useTheme();
   return (
     <Card style={{ borderColor: t.colors.danger, borderWidth: 1, gap: 10 }}>
-      <Text>{message}</Text>
+      <Row gap={8}>
+        <Icon name="alert-circle-outline" color={t.colors.danger} />
+        <Text style={{ flex: 1 }}>{message}</Text>
+      </Row>
       {onRetry ? <Button title="Retry" variant="secondary" size="sm" onPress={onRetry} /> : null}
     </Card>
   );

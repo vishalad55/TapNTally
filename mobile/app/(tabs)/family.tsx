@@ -6,7 +6,7 @@ import { ApiClientError } from '../../src/api/client';
 import { useHousehold, useHouseholdMutations, useSummary, useTransactions } from '../../src/api/hooks';
 import { DonutChart, type DonutSelection } from '../../src/components/DonutChart';
 import { TransactionRow } from '../../src/components/TransactionRow';
-import { Button, Card, EmptyState, Loading, Row, Screen, SectionHeader, Text } from '../../src/components/ui';
+import { Badge, Button, Card, EmptyState, Loading, Row, Screen, SectionHeader, Text } from '../../src/components/ui';
 import { useSession } from '../../src/store/session';
 import { type Theme, fonts, useTheme } from '../../src/theme';
 
@@ -109,8 +109,8 @@ export default function Family() {
             </Text>
           </View>
           <Row gap={6}>
-            <Button title="Copy" variant="secondary" size="sm" onPress={copyInvite} />
-            <Button title="Share" size="sm" onPress={shareInvite} />
+            <Button title="Copy" icon="copy-outline" variant="secondary" size="sm" onPress={copyInvite} />
+            <Button title="Share" icon="share-outline" size="sm" onPress={shareInvite} />
           </Row>
         </Row>
         {isOwner ? (
@@ -134,8 +134,8 @@ export default function Family() {
             <Text variant="caption">
               {m.name}
               {m.userId === user?.id ? ' (you)' : ''}
-              {m.role === 'owner' ? ' 👑' : ''}
             </Text>
+            {m.role === 'owner' ? <Badge label="owner" color={t.colors.inkMuted} /> : null}
           </View>
         ))}
       </Row>
@@ -148,7 +148,7 @@ export default function Family() {
         Only purchases marked "shared" appear here. Toggle it on any purchase.
       </Text>
       <Row style={{ justifyContent: 'space-between', marginTop: 16, marginBottom: 4 }}>
-        <Text variant="title">{sel ? `${sel.icon} ${sel.label}` : 'Shared purchases'}</Text>
+        <Text variant="title">{sel ? sel.label : 'Shared purchases'}</Text>
         {sel ? (
           <Pressable onPress={() => setSel(null)} hitSlop={8}>
             <Text variant="caption" color={t.colors.accent}>
@@ -170,7 +170,7 @@ export default function Family() {
         renderItem={({ item }) => <TransactionRow tx={item} showShared={false} onPress={() => router.push({ pathname: '/transaction/[id]', params: { id: item.id } })} />}
         onEndReached={() => feed.hasNextPage && !feed.isFetchingNextPage && feed.fetchNextPage()}
         refreshControl={<RefreshControl refreshing={household.isRefetching || feed.isRefetching} onRefresh={() => { void household.refetch(); void summary.refetch(); void feed.refetch(); }} tintColor={t.colors.accent} />}
-        ListEmptyComponent={feed.isLoading ? <Loading /> : <EmptyState icon="🏠" title="Nothing shared yet" body="Mark a grocery run or a bill as shared and it shows up here for everyone." />}
+        ListEmptyComponent={feed.isLoading ? <Loading /> : <EmptyState icon="home-outline" title="Nothing shared yet" body="Mark a grocery run or a bill as shared and it shows up here for everyone." />}
         ListFooterComponent={<View style={{ height: 130 }} />}
         showsVerticalScrollIndicator={false}
       />

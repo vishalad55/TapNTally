@@ -9,6 +9,7 @@ import { TransactionRow } from '../../src/components/TransactionRow';
 import { Chip, EmptyState, ErrorBanner, Loading, Row, Screen, Text } from '../../src/components/ui';
 import { useSession } from '../../src/store/session';
 import { fonts, useTheme } from '../../src/theme';
+import { Icon, type IoniconName, categoryIconName } from '../../src/theme/icons';
 
 type DateKey = 'month' | 'last_month' | '90d' | 'all';
 type AmountKey = 'lt500' | '500_2k' | 'gt2k' | 'all';
@@ -30,11 +31,11 @@ const METHOD_OPTS: Array<{ key: PaymentMethod; label: string }> = [
   { key: PaymentMethod.CARD, label: 'Card' },
   { key: PaymentMethod.CASH, label: 'Cash' },
 ];
-const SOURCE_OPTS: Array<{ key: TransactionSource; label: string }> = [
-  { key: TransactionSource.NFC, label: '📡 Tap' },
-  { key: TransactionSource.GMAIL, label: '✉️ Gmail' },
-  { key: TransactionSource.SMS, label: '💬 SMS' },
-  { key: TransactionSource.MANUAL, label: '✍️ Manual' },
+const SOURCE_OPTS: Array<{ key: TransactionSource; label: string; icon: IoniconName }> = [
+  { key: TransactionSource.NFC, label: 'Tap', icon: 'wifi-outline' },
+  { key: TransactionSource.GMAIL, label: 'Gmail', icon: 'mail-outline' },
+  { key: TransactionSource.SMS, label: 'SMS', icon: 'chatbubble-ellipses-outline' },
+  { key: TransactionSource.MANUAL, label: 'Manual', icon: 'create-outline' },
 ];
 
 type Item = { type: 'header'; key: string; label: string } | { type: 'tx'; key: string; tx: Transaction };
@@ -105,7 +106,7 @@ export default function History() {
         <Text variant="title">History</Text>
         <Row gap={10}>
           <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: t.colors.surfaceAlt, borderRadius: t.radius.pill, paddingHorizontal: 16 }}>
-            <Text muted>🔍</Text>
+            <Icon name="search-outline" size={18} color={t.colors.inkMuted} />
             <TextInput
               value={text}
               onChangeText={setText}
@@ -117,17 +118,17 @@ export default function History() {
             />
             {text ? (
               <Pressable onPress={() => setText('')} hitSlop={8}>
-                <Text muted>✕</Text>
+                <Icon name="close" size={18} color={t.colors.inkMuted} />
               </Pressable>
             ) : null}
           </View>
           {user?.householdId ? (
-            <Chip label={scope === 'shared' ? '👨‍👩‍👧 Household' : '👤 Mine'} selected={scope === 'shared'} onPress={() => setScope(scope === 'shared' ? 'personal' : 'shared')} />
+            <Chip icon={scope === 'shared' ? 'people-outline' : 'person-outline'} label={scope === 'shared' ? 'Household' : 'Mine'} selected={scope === 'shared'} onPress={() => setScope(scope === 'shared' ? 'personal' : 'shared')} />
           ) : null}
         </Row>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-          {activeFilters > 0 ? <Chip label={`Clear (${activeFilters})`} selected onPress={clear} /> : null}
+          {activeFilters > 0 ? <Chip icon="close" label={`Clear (${activeFilters})`} selected onPress={clear} /> : null}
           {DATE_OPTS.map((o) => (
             <Chip key={o.key} label={o.label} selected={date === o.key} onPress={() => setDate(o.key)} />
           ))}
@@ -140,12 +141,12 @@ export default function History() {
             <Chip key={o.key} label={o.label} selected={method === o.key} onPress={() => setMethod(method === o.key ? null : o.key)} />
           ))}
           {SOURCE_OPTS.map((o) => (
-            <Chip key={o.key} label={o.label} selected={source === o.key} onPress={() => setSource(source === o.key ? null : o.key)} />
+            <Chip key={o.key} icon={o.icon} label={o.label} selected={source === o.key} onPress={() => setSource(source === o.key ? null : o.key)} />
           ))}
         </ScrollView>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
           {(cats.data ?? []).map((c) => (
-            <Chip key={c.id} label={`${c.icon} ${c.name}`} color={c.color} selected={category === c.id} onPress={() => setCategory(category === c.id ? null : c.id)} />
+            <Chip key={c.id} icon={categoryIconName(c.slug)} label={c.name} color={c.color} selected={category === c.id} onPress={() => setCategory(category === c.id ? null : c.id)} />
           ))}
         </ScrollView>
       </View>
@@ -173,7 +174,7 @@ export default function History() {
             </Text>
           ) : null
         }
-        ListEmptyComponent={feed.isLoading ? <Loading /> : feed.error ? <ErrorBanner message="Couldn't search right now." onRetry={() => void feed.refetch()} /> : <EmptyState icon="🔎" title="No matches" body="Try a different merchant name or loosen a filter." />}
+        ListEmptyComponent={feed.isLoading ? <Loading /> : feed.error ? <ErrorBanner message="Couldn't search right now." onRetry={() => void feed.refetch()} /> : <EmptyState icon="search-outline" title="No matches" body="Try a different merchant name or loosen a filter." />}
         ListFooterComponent={feed.isFetchingNextPage ? <Loading /> : <View style={{ height: 130 }} />}
         showsVerticalScrollIndicator={false}
       />

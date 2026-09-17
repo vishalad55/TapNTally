@@ -9,13 +9,14 @@ import { useConnectionMutations, useConnections } from '../src/api/hooks';
 import { Badge, Button, Card, ErrorBanner, Loading, Row, Text } from '../src/components/ui';
 import { collectPaymentSms, markScanned, requestSmsPermission, resetScanCursor, smsSupported } from '../src/sms';
 import { useTheme } from '../src/theme';
+import { Icon, type IoniconName } from '../src/theme/icons';
 
 const GOOGLE_WEB_CLIENT_ID = (Constants.expoConfig?.extra as { googleWebClientId?: string } | undefined)?.googleWebClientId ?? '';
 const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.readonly';
 
 const STATUS_LABEL: Record<ConnectionStatus, { label: string; tone: 'ok' | 'warn' | 'bad' | 'off' }> = {
   [ConnectionStatus.DISCONNECTED]: { label: 'Not connected', tone: 'off' },
-  [ConnectionStatus.BACKFILLING]: { label: 'Scanning history…', tone: 'warn' },
+  [ConnectionStatus.BACKFILLING]: { label: 'Scanning history', tone: 'warn' },
   [ConnectionStatus.ACTIVE]: { label: 'Connected', tone: 'ok' },
   [ConnectionStatus.NEEDS_REAUTH]: { label: 'Needs reconnect', tone: 'bad' },
   [ConnectionStatus.ERROR]: { label: 'Sync error', tone: 'bad' },
@@ -97,23 +98,23 @@ export default function Connections() {
       <Text muted>Online orders don't come through a terminal, so we read the confirmations instead — narrowly.</Text>
 
       <ConnectionCard
-        icon="✉️"
+        icon="mail-outline"
         title="Gmail"
         conn={gmail}
         trust="We search only for order confirmations and invoices from known shops (Amazon, Flipkart, Myntra, Swiggy…). Emails are parsed and discarded — never stored, never read by a person. Read-only access; disconnect any time."
         actions={
           gmail?.status === ConnectionStatus.DISCONNECTED || !gmail ? (
             <>
-              <Button title="Connect Gmail" onPress={connectGmail} loading={busy === 'gmail'} disabled={!GOOGLE_WEB_CLIENT_ID} />
+              <Button title="Connect Gmail" icon="logo-google" onPress={connectGmail} loading={busy === 'gmail'} disabled={!GOOGLE_WEB_CLIENT_ID} />
               {!GOOGLE_WEB_CLIENT_ID ? (
                 <Text variant="caption" faint>
-                  Needs a Google client ID in app.json → extra.googleWebClientId
+                  Available once Google sign-in is configured for this build.
                 </Text>
               ) : null}
             </>
           ) : (
             <Row gap={8}>
-              <Button title={gmail.status === ConnectionStatus.NEEDS_REAUTH ? 'Reconnect' : 'Sync now'} variant="secondary" onPress={gmail.status === ConnectionStatus.NEEDS_REAUTH ? connectGmail : () => run('gmail', () => m.syncGmail.mutateAsync())} loading={busy === 'gmail'} style={{ flex: 1 }} />
+              <Button title={gmail.status === ConnectionStatus.NEEDS_REAUTH ? 'Reconnect' : 'Sync now'} icon="refresh-outline" variant="secondary" onPress={gmail.status === ConnectionStatus.NEEDS_REAUTH ? connectGmail : () => run('gmail', () => m.syncGmail.mutateAsync())} loading={busy === 'gmail'} style={{ flex: 1 }} />
               <Button title="Disconnect" variant="ghost" onPress={disconnectGmail} />
             </Row>
           )
@@ -121,7 +122,7 @@ export default function Connections() {
       />
 
       <ConnectionCard
-        icon="💬"
+        icon="chatbubble-ellipses-outline"
         title="SMS"
         conn={sms}
         trust={
@@ -132,7 +133,7 @@ export default function Connections() {
         actions={
           !smsSupported ? null : sms?.status === ConnectionStatus.ACTIVE ? (
             <Row gap={8}>
-              <Button title="Scan new" variant="secondary" onPress={() => scanSms(false)} loading={busy === 'sms'} style={{ flex: 1 }} />
+              <Button title="Scan new" icon="refresh-outline" variant="secondary" onPress={() => scanSms(false)} loading={busy === 'sms'} style={{ flex: 1 }} />
               <Button title="Rescan" variant="ghost" onPress={() => scanSms(true)} />
               <Button title="Stop" variant="ghost" onPress={disconnectSms} />
             </Row>
@@ -147,7 +148,7 @@ export default function Connections() {
   );
 }
 
-function ConnectionCard({ icon, title, conn, trust, actions }: { icon: string; title: string; conn: Connection | undefined; trust: string; actions: React.ReactNode }) {
+function ConnectionCard({ icon, title, conn, trust, actions }: { icon: IoniconName; title: string; conn: Connection | undefined; trust: string; actions: React.ReactNode }) {
   const t = useTheme();
   const status = conn?.status ?? ConnectionStatus.DISCONNECTED;
   const s = STATUS_LABEL[status];
@@ -157,7 +158,7 @@ function ConnectionCard({ icon, title, conn, trust, actions }: { icon: string; t
       <Row style={{ justifyContent: 'space-between' }}>
         <Row gap={10}>
           <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: t.colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ fontSize: 22 }}>{icon}</Text>
+            <Icon name={icon} size={22} />
           </View>
           <Text variant="title">{title}</Text>
         </Row>
@@ -167,12 +168,13 @@ function ConnectionCard({ icon, title, conn, trust, actions }: { icon: string; t
         <Text variant="caption" muted>
           {conn.importedCount} purchase{conn.importedCount === 1 ? '' : 's'} imported
           {conn.lastSyncedAt ? ` · synced ${formatDistanceToNow(new Date(conn.lastSyncedAt), { addSuffix: true })}` : ''}
-          {conn.lastError ? `\n⚠️ ${conn.lastError}` : ''}
+          {conn.lastError ? `\nLast error: ${conn.lastError}` : ''}
         </Text>
       ) : null}
-      <View style={{ backgroundColor: t.colors.surfaceAlt, borderRadius: t.radius.md, padding: 12 }}>
-        <Text variant="caption" style={{ lineHeight: 18 }}>
-          🔒 {trust}
+      <View style={{ flexDirection: 'row', gap: 10, backgroundColor: t.colors.surfaceAlt, borderRadius: t.radius.md, padding: 12 }}>
+        <Icon name="lock-closed-outline" size={16} color={t.colors.inkMuted} />
+        <Text variant="caption" style={{ flex: 1, lineHeight: 18 }}>
+          {trust}
         </Text>
       </View>
       {actions}

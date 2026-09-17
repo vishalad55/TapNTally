@@ -8,6 +8,7 @@ import { ApiClientError } from '../api/client';
 import { useIngestNfcBill } from '../api/hooks';
 import { useNfcTap, type NfcReadResult } from '../nfc';
 import { useTheme } from '../theme';
+import { Icon, TapGlyph } from '../theme/icons';
 import { NfcFab } from './NfcFab';
 import { ReceiptFlash } from './ReceiptFlash';
 import { Button, Row, Text } from './ui';
@@ -81,15 +82,15 @@ export function TapFlow() {
         <View style={[styles.sheet, sheet]}>
           <View style={{ alignItems: 'center', gap: 14 }}>
             <View style={{ width: 104, height: 104, borderRadius: 52, backgroundColor: t.colors.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
-              {state.kind === 'posting' ? <ActivityIndicator size="large" color={t.colors.accent} /> : <Text style={{ fontSize: 48 }}>📡</Text>}
+              {state.kind === 'posting' ? <ActivityIndicator size="large" color={t.colors.accent} /> : <TapGlyph size={52} color={t.colors.accent} />}
             </View>
-            <Text variant="title">{state.kind === 'posting' ? 'Filing your bill…' : 'Hold near the terminal'}</Text>
+            <Text variant="title">{state.kind === 'posting' ? 'Filing your bill' : 'Hold near the terminal'}</Text>
             <Text muted style={{ textAlign: 'center' }}>
               {state.kind === 'posting'
                 ? 'Categorising it and updating your month.'
                 : readerKind === 'mock'
                   ? 'Demo terminal — simulating a tap.'
-                  : 'Keep your phone still against the NFC mark on the terminal.'}
+                  : 'Keep your phone still against the contactless mark on the terminal.'}
             </Text>
             {state.kind === 'scanning' ? <Button title="Cancel" variant="ghost" onPress={dismiss} /> : null}
           </View>
@@ -100,8 +101,10 @@ export function TapFlow() {
         <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.colors.scrim }]} onPress={dismiss} />
         {state.kind === 'error' ? (
           <View style={[styles.sheet, sheet, { gap: 12 }]}>
-            <Row gap={10}>
-              <Text style={{ fontSize: 30 }}>😬</Text>
+            <Row gap={12}>
+              <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: t.colors.warn + '26', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name="alert-circle-outline" size={26} color={t.colors.warn} />
+              </View>
               <Text variant="title" style={{ flex: 1 }}>
                 {state.title}
               </Text>

@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { Platform, View } from 'react-native';
 import Svg, { Circle, G, Path } from 'react-native-svg';
 import { useTheme } from '../theme';
+import { Icon, categoryIconName } from '../theme/icons';
 import { Text } from './ui';
 
 export interface DonutSelection {
@@ -12,7 +13,7 @@ export interface DonutSelection {
   /** Category ids the slice covers (one, or several for "Other"). */
   categoryIds: string[];
   label: string;
-  icon: string;
+  slug: string | null;
 }
 
 interface Props {
@@ -29,7 +30,6 @@ interface Props {
  * Tappable donut. Each slice is its own <Path> with a press handler; the
  * selected slice pops outward and the centre switches from the total to that
  * category. Slices under 2.5 % merge into "Other" so nothing is un-tappable.
- * Slices are separated by a thin gap in the ground colour for a crisp look.
  */
 export function DonutChart({ data, totalPaise, selectedId, onSelect, periodLabel = 'this month', size = 250, thickness = 34 }: Props) {
   const t = useTheme();
@@ -45,7 +45,7 @@ export function DonutChart({ data, totalPaise, selectedId, onSelect, periodLabel
     const merged = big.map((d) => ({
       id: d.category.id,
       label: d.category.name,
-      icon: d.category.icon,
+      slug: d.category.slug as string | null,
       color: d.category.color,
       amountPaise: d.amountPaise,
       share: d.share,
@@ -55,7 +55,7 @@ export function DonutChart({ data, totalPaise, selectedId, onSelect, periodLabel
       merged.push({
         id: '__other',
         label: 'Other',
-        icon: '•',
+        slug: null,
         color: t.colors.inkFaint,
         amountPaise: small.reduce((s, d) => s + d.amountPaise, 0),
         share: small.reduce((s, d) => s + d.share, 0),
@@ -99,14 +99,14 @@ export function DonutChart({ data, totalPaise, selectedId, onSelect, periodLabel
             const offset = isSel ? 8 : 0;
             const dx = Math.cos(s.mid) * offset;
             const dy = Math.sin(s.mid) * offset;
-            const press = () => onSelect(isSel ? null : { id: s.id, categoryIds: s.categoryIds, label: s.label, icon: s.icon });
+            const press = () => onSelect(isSel ? null : { id: s.id, categoryIds: s.categoryIds, label: s.label, slug: s.slug });
             return (
               <Path
                 key={s.id}
                 d={arcPath(cx + dx, cy + dy, r, inner, s.start, s.end)}
                 fill={s.color}
                 opacity={dim ? 0.3 : 1}
-                stroke={t.colors.bg}
+                stroke={t.colors.surface}
                 strokeWidth={slices.length > 1 ? 3 : 0}
                 {...{ [Platform.OS === 'web' ? 'onClick' : 'onPress']: press }}
               />
@@ -117,7 +117,7 @@ export function DonutChart({ data, totalPaise, selectedId, onSelect, periodLabel
       <View pointerEvents="none" style={{ position: 'absolute', alignItems: 'center', paddingHorizontal: 28 }}>
         {selected ? (
           <>
-            <Text style={{ fontSize: 24 }}>{selected.icon}</Text>
+            <Icon name={selected.id === '__other' ? 'ellipsis-horizontal' : categoryIconName(selected.slug)} size={22} color={selected.color} />
             <Text variant="display" style={{ textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
               {formatPaise(selected.amountPaise, { showDecimals: false })}
             </Text>
@@ -149,11 +149,5 @@ function arcPath(cx: number, cy: number, rOuter: number, rInner: number, start: 
   if (full) end = start + Math.PI * 2 - 1e-4;
   const large = end - start > Math.PI ? 1 : 0;
   const p = (r: number, a: number) => `${cx + r * Math.cos(a)} ${cy + r * Math.sin(a)}`;
-  return [
-    `M ${p(rOuter, start)}`,
-    `A ${rOuter} ${rOuter} 0 ${large} 1 ${p(rOuter, end)}`,
-    `L ${p(rInner, end)}`,
-    `A ${rInner} ${rInner} 0 ${large} 0 ${p(rInner, start)}`,
-    'Z',
-  ].join(' ');
+  return [`M ${p(rOuter, start)}`, `A ${rOuter} ${rOuter} 0 ${large} 1 ${p(rOuter, end)}`, `L ${p(rInner, end)}`, `A ${rInner} ${rInner} 0 ${large} 0 ${p(rInner, start)}`, 'Z'].join(' ');
 }

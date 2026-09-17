@@ -52,8 +52,8 @@ export default function BudgetEdit() {
         <>
           <SectionHeader title="Who is this for?" />
           <Row gap={8}>
-            <Chip label="👤 Just me" selected={scope === BudgetScope.USER} onPress={() => setScope(BudgetScope.USER)} />
-            <Chip label="👨‍👩‍👧 Household" selected={scope === BudgetScope.HOUSEHOLD} onPress={() => setScope(BudgetScope.HOUSEHOLD)} />
+            <Chip icon="person-outline" label="Just me" selected={scope === BudgetScope.USER} onPress={() => setScope(BudgetScope.USER)} />
+            <Chip icon="people-outline" label="Household" selected={scope === BudgetScope.HOUSEHOLD} onPress={() => setScope(BudgetScope.HOUSEHOLD)} />
           </Row>
         </>
       ) : null}
