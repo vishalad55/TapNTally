@@ -1,9 +1,9 @@
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, useEffect, useRef } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Pressable,
   type PressableProps,
-  StyleSheet,
   Text as RNText,
   type TextProps,
   View,
@@ -11,9 +11,9 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { typography, useTheme } from '../theme';
+import { type TypographyVariant, typography, useTheme } from '../theme';
 
-/** Themed text with a small set of named variants. */
+/** Themed text with named variants from the design system. */
 export function Text({
   variant = 'body',
   muted,
@@ -21,31 +21,32 @@ export function Text({
   color,
   style,
   ...props
-}: TextProps & { variant?: keyof typeof typography; muted?: boolean; faint?: boolean; color?: string }) {
+}: TextProps & { variant?: TypographyVariant; muted?: boolean; faint?: boolean; color?: string }) {
   const t = useTheme();
-  const c = color ?? (faint ? t.colors.textFaint : muted ? t.colors.textMuted : t.colors.text);
+  const c = color ?? (faint ? t.colors.inkFaint : muted ? t.colors.inkMuted : t.colors.ink);
   return <RNText {...props} style={[typography[variant] as object, { color: c }, style]} />;
 }
 
 export function Screen({ children, style, padded = true, ...props }: ViewProps & { padded?: boolean }) {
   const t = useTheme();
   return (
-    <SafeAreaView edges={['top']} style={[{ flex: 1, backgroundColor: t.colors.background }, style]} {...props}>
-      <View style={{ flex: 1, paddingHorizontal: padded ? t.spacing(4) : 0 }}>{children}</View>
+    <SafeAreaView edges={['top']} style={[{ flex: 1, backgroundColor: t.colors.bg }, style]} {...props}>
+      <View style={{ flex: 1, paddingHorizontal: padded ? t.spacing(5) : 0 }}>{children}</View>
     </SafeAreaView>
   );
 }
 
-export function Card({ children, style, ...props }: ViewProps) {
+export function Card({ children, style, tone = 'surface', ...props }: ViewProps & { tone?: 'surface' | 'alt' | 'accent' }) {
   const t = useTheme();
+  const bg = tone === 'accent' ? t.colors.accentSoft : tone === 'alt' ? t.colors.surfaceAlt : t.colors.surface;
   return (
     <View
       {...props}
       style={[
         {
-          backgroundColor: t.colors.surface,
+          backgroundColor: bg,
           borderRadius: t.radius.lg,
-          borderWidth: StyleSheet.hairlineWidth,
+          borderWidth: tone === 'surface' ? t.cardBorderWidth : 0,
           borderColor: t.colors.border,
           padding: t.spacing(4),
         },
@@ -76,37 +77,46 @@ export function Button({
   disabled,
   style,
   icon,
+  size = 'md',
   ...props
-}: PressableProps & { title: string; variant?: 'primary' | 'secondary' | 'ghost' | 'danger'; loading?: boolean; icon?: string; style?: ViewStyle }) {
+}: PressableProps & {
+  title: string;
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  loading?: boolean;
+  icon?: string;
+  size?: 'sm' | 'md';
+  style?: ViewStyle;
+}) {
   const t = useTheme();
   const bg =
-    variant === 'primary' ? t.colors.accent : variant === 'danger' ? t.colors.danger : variant === 'secondary' ? t.colors.surfaceElevated : 'transparent';
-  const fg = variant === 'primary' ? t.colors.onAccent : variant === 'danger' ? '#fff' : t.colors.text;
+    variant === 'primary' ? t.colors.accent : variant === 'danger' ? t.colors.danger : variant === 'secondary' ? t.colors.surfaceAlt : 'transparent';
+  const fg = variant === 'primary' ? t.colors.accentInk : variant === 'danger' ? '#FFFFFF' : t.colors.ink;
+  const scale = useRef(new Animated.Value(1)).current;
+  const press = (to: number) => Animated.spring(scale, { toValue: to, useNativeDriver: true, speed: 40, bounciness: 6 }).start();
   return (
-    <Pressable
-      {...props}
-      disabled={disabled || loading}
-      style={({ pressed }) => [
-        {
+    <Animated.View style={[{ transform: [{ scale }] }, style]}>
+      <Pressable
+        {...props}
+        disabled={disabled || loading}
+        onPressIn={() => press(0.96)}
+        onPressOut={() => press(1)}
+        style={{
           backgroundColor: bg,
-          opacity: disabled ? 0.5 : pressed ? 0.85 : 1,
-          paddingVertical: 14,
-          paddingHorizontal: 20,
-          borderRadius: t.radius.md,
+          opacity: disabled ? 0.45 : 1,
+          paddingVertical: size === 'sm' ? 9 : 15,
+          paddingHorizontal: size === 'sm' ? 14 : 22,
+          borderRadius: t.radius.pill,
           alignItems: 'center',
           justifyContent: 'center',
           flexDirection: 'row',
           gap: 8,
-          borderWidth: variant === 'secondary' ? StyleSheet.hairlineWidth : 0,
-          borderColor: t.colors.border,
-        },
-        style,
-      ]}
-    >
-      {loading ? <ActivityIndicator color={fg} /> : null}
-      {icon && !loading ? <RNText style={{ fontSize: 16 }}>{icon}</RNText> : null}
-      <RNText style={[typography.heading, { color: fg }]}>{title}</RNText>
-    </Pressable>
+        }}
+      >
+        {loading ? <ActivityIndicator color={fg} /> : null}
+        {icon && !loading ? <RNText style={{ fontSize: 16 }}>{icon}</RNText> : null}
+        <RNText style={[typography.heading, { color: fg }]}>{title}</RNText>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -123,21 +133,47 @@ export function Chip({
 }) {
   const t = useTheme();
   const accent = color ?? t.colors.accent;
+  const onAccent = color ? '#FFFFFF' : t.colors.accentInk;
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => ({
-        paddingVertical: 7,
-        paddingHorizontal: 12,
+        paddingVertical: 8,
+        paddingHorizontal: 14,
         borderRadius: t.radius.pill,
-        backgroundColor: selected ? accent : t.colors.surface,
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: selected ? accent : t.colors.border,
+        backgroundColor: selected ? accent : t.colors.surfaceAlt,
         opacity: pressed ? 0.8 : 1,
+        transform: [{ scale: pressed ? 0.97 : 1 }],
       })}
     >
-      <RNText style={[typography.caption, { fontWeight: '600', color: selected ? '#fff' : t.colors.text }]}>{label}</RNText>
+      <RNText style={[typography.caption, { color: selected ? onAccent : t.colors.ink }]}>{label}</RNText>
     </Pressable>
+  );
+}
+
+/** Rotated pill label — the "sticker" motif for VERIFIED / SHARED / source badges. */
+export function Sticker({ label, color, tilt = -3 }: { label: string; color: string; tilt?: number }) {
+  return (
+    <View
+      style={{
+        paddingHorizontal: 7,
+        paddingVertical: 3,
+        borderRadius: 6,
+        backgroundColor: color,
+        transform: [{ rotate: `${tilt}deg` }],
+      }}
+    >
+      <RNText style={[typography.micro, { color: contrastInk(color) }]}>{label}</RNText>
+    </View>
+  );
+}
+
+/** Flat pill for quieter labels (source badges). */
+export function Badge({ label, color }: { label: string; color: string }) {
+  return (
+    <View style={{ paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, backgroundColor: color + '26' }}>
+      <RNText style={[typography.micro, { color }]}>{label}</RNText>
+    </View>
   );
 }
 
@@ -145,8 +181,10 @@ export function EmptyState({ icon, title, body, children }: PropsWithChildren<{ 
   const t = useTheme();
   return (
     <View style={{ alignItems: 'center', paddingVertical: t.spacing(10), paddingHorizontal: t.spacing(6), gap: 8 }}>
-      <RNText style={{ fontSize: 44 }}>{icon}</RNText>
-      <Text variant="heading" style={{ textAlign: 'center' }}>
+      <View style={{ width: 84, height: 84, borderRadius: 42, backgroundColor: t.colors.surfaceAlt, alignItems: 'center', justifyContent: 'center', marginBottom: 6 }}>
+        <RNText style={{ fontSize: 40 }}>{icon}</RNText>
+      </View>
+      <Text variant="title" style={{ textAlign: 'center' }}>
         {title}
       </Text>
       {body ? (
@@ -172,19 +210,48 @@ export function Loading({ label }: { label?: string }) {
 export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: () => void }) {
   const t = useTheme();
   return (
-    <Card style={{ borderColor: t.colors.danger, gap: 8 }}>
+    <Card style={{ borderColor: t.colors.danger, borderWidth: 1, gap: 10 }}>
       <Text>{message}</Text>
-      {onRetry ? <Button title="Retry" variant="secondary" onPress={onRetry} /> : null}
+      {onRetry ? <Button title="Retry" variant="secondary" size="sm" onPress={onRetry} /> : null}
     </Card>
   );
 }
 
-export function SectionHeader({ title, right }: { title: string; right?: React.ReactNode }) {
+export function SectionHeader({ title, right, eyebrow }: { title: string; right?: React.ReactNode; eyebrow?: string }) {
   const t = useTheme();
   return (
-    <Row style={{ justifyContent: 'space-between', marginTop: t.spacing(5), marginBottom: t.spacing(2) }}>
-      <Text variant="heading">{title}</Text>
+    <Row style={{ justifyContent: 'space-between', marginTop: t.spacing(6), marginBottom: t.spacing(3) }}>
+      <View>
+        {eyebrow ? (
+          <Text variant="micro" faint>
+            {eyebrow}
+          </Text>
+        ) : null}
+        <Text variant="title">{title}</Text>
+      </View>
       {right}
     </Row>
   );
+}
+
+/** Fades + slides children in on mount. Used for list rows (staggered by index). */
+export function Reveal({ children, index = 0, style }: PropsWithChildren<{ index?: number; style?: ViewStyle }>) {
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(v, { toValue: 1, duration: 320, delay: Math.min(index, 10) * 30, useNativeDriver: true }).start();
+  }, [v, index]);
+  return (
+    <Animated.View style={[{ opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] }, style]}>
+      {children}
+    </Animated.View>
+  );
+}
+
+/** Black or white text for a given background hex. */
+export function contrastInk(hex: string): string {
+  const n = parseInt(hex.replace('#', '').slice(0, 6), 16);
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  return 0.299 * r + 0.587 * g + 0.114 * b > 150 ? '#15130F' : '#FFFFFF';
 }

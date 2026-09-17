@@ -1,5 +1,5 @@
 import type { Category } from '@tapntally/shared';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useCategories } from '../api/hooks';
 import { useTheme } from '../theme';
 import { Loading, Text } from './ui';
@@ -22,17 +22,17 @@ export function CategoryPicker({ value, onChange, compact }: { value: string | n
               flexDirection: 'row',
               alignItems: 'center',
               gap: 8,
-              paddingVertical: compact ? 8 : 12,
+              paddingVertical: compact ? 9 : 13,
               paddingHorizontal: 10,
               borderRadius: t.radius.md,
-              backgroundColor: selected ? c.color + '33' : t.colors.surface,
-              borderWidth: selected ? 2 : StyleSheet.hairlineWidth,
-              borderColor: selected ? c.color : t.colors.border,
+              backgroundColor: selected ? c.color + '33' : t.colors.surfaceAlt,
+              borderWidth: 2,
+              borderColor: selected ? c.color : 'transparent',
               opacity: pressed ? 0.8 : 1,
             })}
           >
             <Text style={{ fontSize: compact ? 16 : 20 }}>{c.icon}</Text>
-            <Text variant={compact ? 'caption' : 'body'} style={{ flex: 1, fontWeight: selected ? '700' : '500' }} numberOfLines={1}>
+            <Text variant={selected ? 'heading' : 'caption'} style={{ flex: 1 }} numberOfLines={1}>
               {c.name}
             </Text>
           </Pressable>

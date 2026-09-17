@@ -3,7 +3,7 @@ import { Link, useRouter } from 'expo-router';
 import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { useBudgets } from '../../src/api/hooks';
 import { BudgetBar } from '../../src/components/BudgetBar';
-import { Button, EmptyState, ErrorBanner, Loading, Row, Screen, SectionHeader, Text } from '../../src/components/ui';
+import { Button, EmptyState, ErrorBanner, Loading, Reveal, Row, Screen, SectionHeader, Text } from '../../src/components/ui';
 import { useSession } from '../../src/store/session';
 import { useTheme } from '../../src/theme';
 
@@ -25,22 +25,22 @@ export default function Budgets() {
     <Screen>
       <ScrollView
         refreshControl={<RefreshControl refreshing={budgets.isRefetching} onRefresh={() => void budgets.refetch()} tintColor={t.colors.accent} />}
-        contentContainerStyle={{ paddingBottom: 140, gap: 10 }}
+        contentContainerStyle={{ paddingBottom: 150, gap: 10 }}
         showsVerticalScrollIndicator={false}
       >
-        <Row style={{ justifyContent: 'space-between', marginTop: 8 }}>
-          <Text variant="title">Budgets</Text>
+        <Row style={{ justifyContent: 'space-between', marginTop: 12 }}>
+          <View>
+            <Text variant="title">Budgets</Text>
+            <Text variant="caption" muted>
+              Caps per category. We nudge you at 80 %.
+            </Text>
+          </View>
           <Link href="/budget-edit" asChild>
-            <Pressable hitSlop={8}>
-              <Text variant="heading" color={t.colors.accent}>
-                + New
-              </Text>
+            <Pressable>
+              <Button title="+ New" size="sm" />
             </Pressable>
           </Link>
         </Row>
-        <Text muted variant="caption">
-          Monthly caps per category. We'll nudge you at 80%.
-        </Text>
 
         {budgets.isLoading ? <Loading /> : null}
         {budgets.error ? <ErrorBanner message="Couldn't load budgets." onRetry={() => void budgets.refetch()} /> : null}
@@ -53,14 +53,17 @@ export default function Budgets() {
           </EmptyState>
         ) : null}
 
-        {mine.length ? <SectionHeader title="Personal" /> : null}
-        {mine.map((b) => (
-          <BudgetBar key={b.budget.id} progress={b} onPress={() => edit(b)} />
+        {mine.length ? <SectionHeader eyebrow="Just you" title="Personal" /> : null}
+        {mine.map((b, i) => (
+          <Reveal key={b.budget.id} index={i}>
+            <BudgetBar progress={b} onPress={() => edit(b)} />
+          </Reveal>
         ))}
 
         {user?.householdId ? (
           <>
             <SectionHeader
+              eyebrow="Everyone"
               title="Household"
               right={
                 <Link href={{ pathname: '/budget-edit', params: { scope: BudgetScope.HOUSEHOLD } }} asChild>
@@ -77,12 +80,13 @@ export default function Budgets() {
                 Shared caps count only purchases marked "shared" by any member.
               </Text>
             ) : null}
-            {household.map((b) => (
-              <BudgetBar key={b.budget.id} progress={b} onPress={() => edit(b)} />
+            {household.map((b, i) => (
+              <Reveal key={b.budget.id} index={i}>
+                <BudgetBar progress={b} onPress={() => edit(b)} />
+              </Reveal>
             ))}
           </>
         ) : null}
-        <View style={{ height: 20 }} />
       </ScrollView>
     </Screen>
   );

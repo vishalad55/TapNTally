@@ -1,7 +1,7 @@
 import type { CategorySpend } from '@tapntally/shared';
 import { formatPaise } from '@tapntally/shared';
 import { useMemo } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import Svg, { Circle, G, Path } from 'react-native-svg';
 import { useTheme } from '../theme';
 import { Text } from './ui';
@@ -26,16 +26,16 @@ interface Props {
 }
 
 /**
- * Tappable donut. Each slice is its own <Path> with onPress; the selected
- * slice pops outward slightly and the centre label switches from the total
- * to that category. Tiny slices are merged into "Other" so the chart never
- * has un-tappable slivers.
+ * Tappable donut. Each slice is its own <Path> with a press handler; the
+ * selected slice pops outward and the centre switches from the total to that
+ * category. Slices under 2.5 % merge into "Other" so nothing is un-tappable.
+ * Slices are separated by a thin gap in the ground colour for a crisp look.
  */
-export function DonutChart({ data, totalPaise, selectedId, onSelect, periodLabel = 'this month', size = 240, thickness = 30 }: Props) {
+export function DonutChart({ data, totalPaise, selectedId, onSelect, periodLabel = 'this month', size = 250, thickness = 34 }: Props) {
   const t = useTheme();
   const cx = size / 2;
   const cy = size / 2;
-  const r = size / 2 - 12; // leave room for the pop-out offset
+  const r = size / 2 - 12;
   const inner = r - thickness;
 
   const slices = useMemo(() => {
@@ -56,7 +56,7 @@ export function DonutChart({ data, totalPaise, selectedId, onSelect, periodLabel
         id: '__other',
         label: 'Other',
         icon: '•',
-        color: t.colors.textFaint,
+        color: t.colors.inkFaint,
         amountPaise: small.reduce((s, d) => s + d.amountPaise, 0),
         share: small.reduce((s, d) => s + d.share, 0),
         categoryIds: small.map((d) => d.category.id),
@@ -69,7 +69,7 @@ export function DonutChart({ data, totalPaise, selectedId, onSelect, periodLabel
       angle += sweep;
       return { ...m, start, end: angle, mid: start + sweep / 2 };
     });
-  }, [data, t.colors.textFaint]);
+  }, [data, t.colors.inkFaint]);
 
   const selected = slices.find((s) => s.id === selectedId) ?? null;
 
@@ -77,10 +77,10 @@ export function DonutChart({ data, totalPaise, selectedId, onSelect, periodLabel
     return (
       <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
         <Svg width={size} height={size}>
-          <Circle cx={cx} cy={cy} r={r - thickness / 2} stroke={t.colors.border} strokeWidth={thickness} fill="none" />
+          <Circle cx={cx} cy={cy} r={r - thickness / 2} stroke={t.colors.surfaceAlt} strokeWidth={thickness} fill="none" />
         </Svg>
         <View style={{ position: 'absolute', alignItems: 'center' }}>
-          <Text variant="title">₹0</Text>
+          <Text variant="display">₹0</Text>
           <Text muted variant="caption">
             nothing yet
           </Text>
@@ -99,23 +99,26 @@ export function DonutChart({ data, totalPaise, selectedId, onSelect, periodLabel
             const offset = isSel ? 8 : 0;
             const dx = Math.cos(s.mid) * offset;
             const dy = Math.sin(s.mid) * offset;
+            const press = () => onSelect(isSel ? null : { id: s.id, categoryIds: s.categoryIds, label: s.label, icon: s.icon });
             return (
               <Path
                 key={s.id}
                 d={arcPath(cx + dx, cy + dy, r, inner, s.start, s.end)}
                 fill={s.color}
-                opacity={dim ? 0.35 : 1}
-                onPress={() => onSelect(isSel ? null : { id: s.id, categoryIds: s.categoryIds, label: s.label, icon: s.icon })}
+                opacity={dim ? 0.3 : 1}
+                stroke={t.colors.bg}
+                strokeWidth={slices.length > 1 ? 3 : 0}
+                {...{ [Platform.OS === 'web' ? 'onClick' : 'onPress']: press }}
               />
             );
           })}
         </G>
       </Svg>
-      <View pointerEvents="none" style={{ position: 'absolute', alignItems: 'center', paddingHorizontal: 24 }}>
+      <View pointerEvents="none" style={{ position: 'absolute', alignItems: 'center', paddingHorizontal: 28 }}>
         {selected ? (
           <>
-            <Text style={{ fontSize: 22 }}>{selected.icon}</Text>
-            <Text variant="title" style={{ textAlign: 'center' }} numberOfLines={1}>
+            <Text style={{ fontSize: 24 }}>{selected.icon}</Text>
+            <Text variant="display" style={{ textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
               {formatPaise(selected.amountPaise, { showDecimals: false })}
             </Text>
             <Text muted variant="caption" numberOfLines={1}>
@@ -124,10 +127,12 @@ export function DonutChart({ data, totalPaise, selectedId, onSelect, periodLabel
           </>
         ) : (
           <>
-            <Text muted variant="caption">
+            <Text variant="micro" faint>
               {periodLabel}
             </Text>
-            <Text variant="title">{formatPaise(totalPaise, { showDecimals: false })}</Text>
+            <Text variant="display" numberOfLines={1} adjustsFontSizeToFit>
+              {formatPaise(totalPaise, { showDecimals: false })}
+            </Text>
             <Text faint variant="caption">
               tap a slice
             </Text>

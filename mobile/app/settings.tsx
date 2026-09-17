@@ -5,7 +5,7 @@ import { useUpdateMe } from '../src/api/hooks';
 import { Button, Card, Chip, Row, SectionHeader, Text } from '../src/components/ui';
 import { useNfcPrefs, type MockScenario } from '../src/nfc';
 import { useSession } from '../src/store/session';
-import { useTheme } from '../src/theme';
+import { type AppearanceMode, useAppearance, useTheme } from '../src/theme';
 
 const SCENARIOS: Array<{ key: MockScenario; label: string }> = [
   { key: 'signed', label: '✅ Signed bill' },
@@ -13,6 +13,11 @@ const SCENARIOS: Array<{ key: MockScenario; label: string }> = [
   { key: 'no_tag', label: '🙈 Missed tap' },
   { key: 'unsupported', label: '🚫 Unsupported terminal' },
   { key: 'malformed', label: '💥 Malformed bill' },
+];
+const APPEARANCES: Array<{ key: AppearanceMode; label: string }> = [
+  { key: 'system', label: '📱 System' },
+  { key: 'light', label: '☀️ Paper' },
+  { key: 'dark', label: '🌙 Arcade' },
 ];
 
 export default function Settings() {
@@ -23,6 +28,7 @@ export default function Settings() {
   const signOut = useSession((s) => s.signOut);
   const updateMe = useUpdateMe();
   const nfc = useNfcPrefs();
+  const appearance = useAppearance();
 
   const toggleConsent = async (v: boolean) => {
     await updateMe.mutateAsync({ aggregateInsightsConsent: v });
@@ -30,11 +36,30 @@ export default function Settings() {
   };
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: t.colors.background }} contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 60 }}>
-      <Card style={{ gap: 2 }}>
-        <Text variant="title">{user?.name}</Text>
-        <Text muted>{user?.email}</Text>
+    <ScrollView style={{ flex: 1, backgroundColor: t.colors.bg }} contentContainerStyle={{ padding: 20, gap: 10, paddingBottom: 60 }}>
+      <Card style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
+        <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: t.colors.accent, alignItems: 'center', justifyContent: 'center' }}>
+          <Text variant="title" color={t.colors.accentInk}>
+            {(user?.name ?? '?').charAt(0).toUpperCase()}
+          </Text>
+        </View>
+        <View>
+          <Text variant="title">{user?.name}</Text>
+          <Text variant="caption" muted>
+            {user?.email}
+          </Text>
+        </View>
       </Card>
+
+      <SectionHeader title="Appearance" />
+      <Row gap={8}>
+        {APPEARANCES.map((a) => (
+          <Chip key={a.key} label={a.label} selected={appearance.mode === a.key} onPress={() => appearance.setMode(a.key)} />
+        ))}
+      </Row>
+      <Text variant="caption" muted>
+        Paper by day, Arcade by night — two moods, not one palette inverted.
+      </Text>
 
       <SectionHeader title="Connections" />
       <Link href="/connections" asChild>
@@ -62,7 +87,7 @@ export default function Settings() {
           <Switch value={!!user?.aggregateInsightsConsent} onValueChange={toggleConsent} trackColor={{ true: t.colors.accent }} disabled={updateMe.isPending} />
         </Row>
         <Text variant="caption" muted style={{ lineHeight: 18 }}>
-          When on, your purchases contribute to anonymised, aggregated trends (e.g. "grocery spend in Bengaluru rose 4% this week"). Your identity, individual purchases and notes are never included, and any group smaller than 20 people is suppressed entirely. Off by default. Change it any time.
+          When on, your purchases contribute to anonymised, aggregated trends. Your identity, individual purchases and notes are never included, and any group smaller than 20 people is suppressed entirely. Off by default.
         </Text>
       </Card>
 
@@ -92,7 +117,7 @@ export default function Settings() {
 
       <SectionHeader title="About" />
       <Card style={{ gap: 4 }}>
-        <Text variant="caption" muted>
+        <Text variant="micro" faint>
           API
         </Text>
         <Text variant="caption" selectable>
@@ -100,15 +125,7 @@ export default function Settings() {
         </Text>
       </Card>
 
-      <Button
-        title="Sign out"
-        variant="secondary"
-        onPress={async () => {
-          await signOut();
-          router.replace('/(auth)/sign-in');
-        }}
-        style={{ marginTop: 12 }}
-      />
+      <Button title="Sign out" variant="secondary" onPress={async () => { await signOut(); router.replace('/(auth)/sign-in'); }} style={{ marginTop: 12 }} />
     </ScrollView>
   );
 }

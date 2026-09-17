@@ -1,17 +1,18 @@
 import Constants from 'expo-constants';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, TextInput, View } from 'react-native';
 import { ApiClientError } from '../../src/api/client';
-import { Button, Card, Screen, Spacer, Text } from '../../src/components/ui';
+import { ThemeToggle } from '../../src/components/ThemeToggle';
+import { Button, Card, Row, Screen, Spacer, Text } from '../../src/components/ui';
 import { useSession } from '../../src/store/session';
-import { useTheme } from '../../src/theme';
+import { fonts, useTheme } from '../../src/theme';
 
 const GOOGLE_WEB_CLIENT_ID = (Constants.expoConfig?.extra as { googleWebClientId?: string } | undefined)?.googleWebClientId ?? '';
 
 /**
- * Google is the real sign-in (and doubles as Gmail linking). The dev/demo
- * sign-in is shown whenever the backend has AUTH_DEV_LOGIN on — which is
- * exactly the pitch-demo configuration.
+ * Google is the real sign-in (and doubles as Gmail linking). The demo
+ * sign-in is shown whenever the backend has AUTH_DEV_LOGIN on — exactly the
+ * pitch-demo configuration.
  */
 export default function SignIn() {
   const t = useTheme();
@@ -35,7 +36,6 @@ export default function SignIn() {
 
   const googleSignIn = () =>
     run('google', async () => {
-      // Lazy: the native module only exists in a dev build.
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { GoogleSignin } = require('@react-native-google-signin/google-signin') as typeof import('@react-native-google-signin/google-signin');
       GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID, offlineAccess: true });
@@ -48,16 +48,26 @@ export default function SignIn() {
 
   return (
     <Screen>
+      <Row style={{ justifyContent: 'flex-end', marginTop: 8 }}>
+        <ThemeToggle />
+      </Row>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, justifyContent: 'center', gap: 16 }}>
-        <View style={{ alignItems: 'center', gap: 6, marginBottom: 12 }}>
-          <Text style={{ fontSize: 56 }}>📡</Text>
-          <Text variant="display">TapNTally</Text>
-          <Text muted style={{ textAlign: 'center' }}>
-            Tap your phone after you pay. The bill files itself.
+        <View style={{ gap: 10, marginBottom: 8 }}>
+          <View style={{ width: 72, height: 72, borderRadius: 24, backgroundColor: t.colors.accent, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-6deg' }] }}>
+            <Text style={{ fontSize: 36 }}>📡</Text>
+          </View>
+          <Text variant="hero" style={{ marginTop: 8 }}>
+            Tap.{'\n'}Tally.{'\n'}
+            <Text variant="hero" color={t.colors.accent}>
+              Done.
+            </Text>
+          </Text>
+          <Text muted style={{ fontSize: 16, lineHeight: 24 }}>
+            Tap your phone after you pay. The bill files itself — categorised, budgeted, shared with the household if you like.
           </Text>
         </View>
 
-        <Card style={{ gap: 12 }}>
+        <Card style={{ gap: 10 }}>
           <Button title="Continue with Google" icon="🔐" onPress={googleSignIn} loading={busy === 'google'} disabled={!GOOGLE_WEB_CLIENT_ID} />
           {!GOOGLE_WEB_CLIENT_ID ? (
             <Text variant="caption" faint style={{ textAlign: 'center' }}>
@@ -66,10 +76,9 @@ export default function SignIn() {
           ) : null}
         </Card>
 
-        <Card style={{ gap: 10 }}>
-          <Text variant="heading">Demo sign-in</Text>
-          <Text variant="caption" muted>
-            Works when the API has AUTH_DEV_LOGIN=true. Try demo@tapntally.app or priya@tapntally.app.
+        <Card tone="alt" style={{ gap: 10 }}>
+          <Text variant="micro" muted>
+            Demo sign-in
           </Text>
           <TextInput
             value={email}
@@ -77,17 +86,13 @@ export default function SignIn() {
             autoCapitalize="none"
             keyboardType="email-address"
             placeholder="you@example.com"
-            placeholderTextColor={t.colors.textFaint}
-            style={{
-              borderWidth: StyleSheet.hairlineWidth,
-              borderColor: t.colors.border,
-              borderRadius: t.radius.md,
-              padding: 12,
-              color: t.colors.text,
-              backgroundColor: t.colors.background,
-            }}
+            placeholderTextColor={t.colors.inkFaint}
+            style={{ borderRadius: t.radius.md, padding: 14, color: t.colors.ink, backgroundColor: t.colors.surface, fontFamily: fonts.body, fontSize: 15 }}
           />
-          <Button title="Sign in" variant="secondary" onPress={() => run('dev', () => signInDev(email.trim()))} loading={busy === 'dev'} />
+          <Button title="Sign in" onPress={() => run('dev', () => signInDev(email.trim()))} loading={busy === 'dev'} />
+          <Text variant="caption" faint>
+            Try demo@tapntally.app or priya@tapntally.app.
+          </Text>
         </Card>
 
         {error ? (
@@ -95,7 +100,7 @@ export default function SignIn() {
             {error}
           </Text>
         ) : null}
-        <Spacer h={40} />
+        <Spacer h={30} />
       </KeyboardAvoidingView>
     </Screen>
   );

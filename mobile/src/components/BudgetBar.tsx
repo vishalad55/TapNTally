@@ -1,13 +1,12 @@
 import type { BudgetProgress } from '@tapntally/shared';
 import { BudgetScope, formatPaise } from '@tapntally/shared';
 import { Pressable, View } from 'react-native';
-import { useTheme } from '../theme';
-import { Badge } from './TransactionRow';
-import { Card, Row, Text } from './ui';
+import { type Theme, useTheme } from '../theme';
+import { Card, Row, Sticker, Text } from './ui';
 
-/** Green → amber → red as spend approaches the cap. */
-export function budgetColor(status: BudgetProgress['status'], t: ReturnType<typeof useTheme>): string {
-  return status === 'exceeded' ? t.colors.danger : status === 'warning' ? t.colors.warning : t.colors.accent;
+/** Money-green → butter → coral as spend approaches the cap. */
+export function budgetColor(status: BudgetProgress['status'], t: Theme): string {
+  return status === 'exceeded' ? t.colors.danger : status === 'warning' ? t.colors.warn : t.colors.money;
 }
 
 export function BudgetBar({ progress, onPress }: { progress: BudgetProgress; onPress?: () => void }) {
@@ -15,36 +14,43 @@ export function BudgetBar({ progress, onPress }: { progress: BudgetProgress; onP
   const { budget, spentPaise, ratio, status } = progress;
   const color = budgetColor(status, t);
   const remaining = budget.limitPaise - spentPaise;
+  const pct = Math.round(ratio * 100);
   return (
     <Pressable onPress={onPress}>
-      <Card style={{ gap: 10 }}>
+      <Card style={{ gap: 12 }}>
         <Row style={{ justifyContent: 'space-between' }}>
-          <Row gap={8}>
-            <Text style={{ fontSize: 20 }}>{budget.category.icon}</Text>
-            <Text variant="heading">{budget.category.name}</Text>
-            {budget.scope === BudgetScope.HOUSEHOLD ? <Badge label="household" color={t.colors.accent} /> : null}
+          <Row gap={10}>
+            <View style={{ width: 40, height: 40, borderRadius: 13, backgroundColor: budget.category.color + '26', alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 20 }}>{budget.category.icon}</Text>
+            </View>
+            <View>
+              <Text variant="heading">{budget.category.name}</Text>
+              <Text variant="caption" muted>
+                {budget.period === 'weekly' ? 'this week' : 'this month'}
+              </Text>
+            </View>
           </Row>
-          <Text variant="caption" muted>
-            {budget.period}
-          </Text>
+          {budget.scope === BudgetScope.HOUSEHOLD ? <Sticker label="household" color={t.colors.pop} /> : null}
+          {status === 'exceeded' ? <Sticker label="over" color={t.colors.danger} tilt={3} /> : null}
         </Row>
-        <View style={{ height: 10, borderRadius: 5, backgroundColor: t.colors.border, overflow: 'hidden' }}>
-          <View style={{ width: `${Math.min(100, ratio * 100)}%`, height: '100%', backgroundColor: color, borderRadius: 5 }} />
+
+        <View style={{ height: 12, borderRadius: 6, backgroundColor: t.colors.surfaceAlt, overflow: 'hidden' }}>
+          <View style={{ width: `${Math.min(100, pct)}%`, height: '100%', backgroundColor: color, borderRadius: 6 }} />
+          {/* 80% tick */}
+          <View style={{ position: 'absolute', left: `${budget.alertThreshold * 100}%`, top: 0, bottom: 0, width: 2, backgroundColor: t.colors.bg, opacity: 0.8 }} />
         </View>
+
         <Row style={{ justifyContent: 'space-between' }}>
-          <Text variant="caption">
-            <Text variant="caption" style={{ fontWeight: '700' }} color={color}>
+          <Row gap={4}>
+            <Text variant="money" color={color}>
               {formatPaise(spentPaise, { showDecimals: false })}
             </Text>
             <Text variant="caption" muted>
-              {' '}
               of {formatPaise(budget.limitPaise, { showDecimals: false })}
             </Text>
-          </Text>
+          </Row>
           <Text variant="caption" muted>
-            {status === 'exceeded'
-              ? `${formatPaise(-remaining, { showDecimals: false })} over`
-              : `${formatPaise(remaining, { showDecimals: false })} left · ${Math.round(ratio * 100)}%`}
+            {status === 'exceeded' ? `${formatPaise(-remaining, { showDecimals: false })} over` : `${formatPaise(remaining, { showDecimals: false })} left · ${pct}%`}
           </Text>
         </Row>
       </Card>

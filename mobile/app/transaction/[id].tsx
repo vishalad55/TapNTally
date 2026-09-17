@@ -1,14 +1,14 @@
-import { CategoryConfidence, PaymentMethod, formatPaise } from '@tapntally/shared';
+import { CategoryConfidence, PaymentMethod, TransactionSource, formatPaise } from '@tapntally/shared';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useLayoutEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Switch, TextInput, View } from 'react-native';
 import { ApiClientError } from '../../src/api/client';
 import { useDeleteTransaction, useTransaction, useUpdateTransaction } from '../../src/api/hooks';
 import { CategoryPicker } from '../../src/components/CategoryPicker';
-import { Badge, friendlyDate } from '../../src/components/TransactionRow';
-import { Button, Card, Chip, ErrorBanner, Loading, Row, SectionHeader, Text } from '../../src/components/ui';
+import { friendlyDate } from '../../src/components/TransactionRow';
+import { Badge, Button, Card, Chip, ErrorBanner, Loading, Row, SectionHeader, Sticker, Text } from '../../src/components/ui';
 import { useSession } from '../../src/store/session';
-import { useTheme } from '../../src/theme';
+import { type Theme, fonts, useTheme } from '../../src/theme';
 
 const METHODS: Array<{ key: PaymentMethod; label: string }> = [
   { key: PaymentMethod.UPI, label: 'UPI' },
@@ -18,10 +18,7 @@ const METHODS: Array<{ key: PaymentMethod; label: string }> = [
   { key: PaymentMethod.WALLET, label: 'Wallet' },
 ];
 
-/**
- * Every transaction is editable. Auto-categorisation is a first guess: when
- * confidence is low/medium and unconfirmed we surface a "check this" nudge.
- */
+/** Every purchase is editable; auto-categorisation is a first guess with a visible "check?" nudge. */
 export default function TransactionDetail() {
   const t = useTheme();
   const router = useRouter();
@@ -50,11 +47,11 @@ export default function TransactionDetail() {
   }, [tx.data]);
 
   useLayoutEffect(() => {
-    nav.setOptions({ title: tx.data?.merchant ?? 'Transaction' });
+    nav.setOptions({ title: tx.data?.merchant ?? 'Purchase' });
   }, [nav, tx.data?.merchant]);
 
   if (tx.isLoading) return <Loading />;
-  if (tx.error || !tx.data) return <ErrorBanner message="Couldn't load this transaction." onRetry={() => void tx.refetch()} />;
+  if (tx.error || !tx.data) return <ErrorBanner message="Couldn't load this purchase." onRetry={() => void tx.refetch()} />;
   const d = tx.data;
   const mine = d.userId === me?.id;
   const needsCheck = !d.categoryConfirmed && d.categoryConfidence !== CategoryConfidence.HIGH;
@@ -79,39 +76,32 @@ export default function TransactionDetail() {
   const confirmDelete = () =>
     Alert.alert('Delete this purchase?', 'This cannot be undone.', [
       { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await del.mutateAsync(d.id);
-          router.back();
-        },
-      },
+      { text: 'Delete', style: 'destructive', onPress: async () => { await del.mutateAsync(d.id); router.back(); } },
     ]);
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: t.colors.background }} contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 80 }} keyboardShouldPersistTaps="handled">
-      <Card style={{ alignItems: 'center', gap: 6 }}>
-        <Text style={{ fontSize: 40 }}>{d.category.icon}</Text>
-        <Text variant="display" style={{ fontVariant: ['tabular-nums'] }}>
-          {formatPaise(d.amountPaise)}
-        </Text>
+    <ScrollView style={{ flex: 1, backgroundColor: t.colors.bg }} contentContainerStyle={{ padding: 20, gap: 10, paddingBottom: 80 }} keyboardShouldPersistTaps="handled">
+      <Card style={{ alignItems: 'center', gap: 8, paddingVertical: 24 }}>
+        <View style={{ width: 64, height: 64, borderRadius: 20, backgroundColor: d.category.color + '26', alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: 32 }}>{d.category.icon}</Text>
+        </View>
+        <Text variant="hero">{formatPaise(d.amountPaise)}</Text>
         <Text variant="heading">{d.merchant}</Text>
         <Text variant="caption" muted>
           {friendlyDate(d.occurredAt)}
         </Text>
-        <Row gap={6} style={{ marginTop: 4 }}>
-          <Badge label={d.source} color={t.colors.textFaint} />
-          {d.source === 'nfc' ? <Badge label="itemised" color={t.colors.accent} /> : null}
-          {d.isShared ? <Badge label="shared" color={t.colors.accent} /> : null}
+        <Row gap={8} style={{ marginTop: 6 }}>
+          <Badge label={d.source} color={t.colors.inkFaint} />
+          {d.source === TransactionSource.NFC ? <Sticker label="itemised" color={t.colors.money} /> : null}
+          {d.isShared ? <Sticker label="shared" color={t.colors.pop} tilt={3} /> : null}
         </Row>
       </Card>
 
       {needsCheck && mine ? (
-        <Card style={{ backgroundColor: t.colors.accentSoft, borderColor: 'transparent' }}>
+        <Card tone="accent" style={{ gap: 2 }}>
           <Text variant="heading">Is "{d.category.name}" right?</Text>
           <Text variant="caption" muted>
-            We guessed this one. Tap a category below to correct it — we'll remember.
+            We guessed this one. Pick a category below to correct it.
           </Text>
         </Card>
       ) : null}
@@ -119,13 +109,13 @@ export default function TransactionDetail() {
       {d.items.length > 0 ? (
         <>
           <SectionHeader title={`Items · ${d.items.length}`} />
-          <Card style={{ gap: 6 }}>
+          <Card style={{ gap: 8 }}>
             {d.items.map((it, i) => (
               <Row key={i} style={{ justifyContent: 'space-between' }}>
                 <Text style={{ flex: 1 }} numberOfLines={1}>
                   {it.name} <Text muted>× {it.qty}</Text>
                 </Text>
-                <Text style={{ fontVariant: ['tabular-nums'] }}>{formatPaise(it.totalPaise)}</Text>
+                <Text variant="money">{formatPaise(it.totalPaise)}</Text>
               </Row>
             ))}
           </Card>
@@ -158,10 +148,10 @@ export default function TransactionDetail() {
           </Card>
 
           <SectionHeader title="Tags" />
-          <TextInput value={tags} onChangeText={setTags} placeholder="office, weekend, gift" placeholderTextColor={t.colors.textFaint} autoCapitalize="none" style={inputStyle(t)} />
+          <TextInput value={tags} onChangeText={setTags} placeholder="office, weekend, gift" placeholderTextColor={t.colors.inkFaint} autoCapitalize="none" style={inputStyle(t)} />
 
           <SectionHeader title="Notes" />
-          <TextInput value={notes} onChangeText={setNotes} placeholder="Anything worth remembering" placeholderTextColor={t.colors.textFaint} multiline style={[inputStyle(t), { minHeight: 80, textAlignVertical: 'top' }]} />
+          <TextInput value={notes} onChangeText={setNotes} placeholder="Anything worth remembering" placeholderTextColor={t.colors.inkFaint} multiline style={[inputStyle(t), { minHeight: 80, textAlignVertical: 'top' }]} />
 
           {error ? <Text color={t.colors.danger}>{error}</Text> : null}
           <Button title="Save" onPress={save} loading={update.isPending} disabled={!dirty} style={{ marginTop: 8 }} />
@@ -178,12 +168,11 @@ export default function TransactionDetail() {
   );
 }
 
-const inputStyle = (t: ReturnType<typeof useTheme>) => ({
-  borderWidth: StyleSheet.hairlineWidth,
-  borderColor: t.colors.border,
+const inputStyle = (t: Theme) => ({
   borderRadius: t.radius.md,
-  padding: 12,
-  color: t.colors.text,
-  backgroundColor: t.colors.surface,
+  padding: 14,
+  color: t.colors.ink,
+  backgroundColor: t.colors.surfaceAlt,
+  fontFamily: fonts.body,
   fontSize: 15,
 });

@@ -1,107 +1,151 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColorScheme } from 'react-native';
+import { create } from 'zustand';
 
 /**
- * Design tokens. One accent (mint green — "money in a good mood"), a warm
- * neutral scale, and semantic colours for budget states. Both schemes are
- * defined up front so every screen renders correctly in dark mode.
+ * Design tokens — see docs/DESIGN.md (the source of truth, mirrored in Figma).
+ *
+ * Light ("Paper") and dark ("Arcade") are two different colour worlds on
+ * purpose: warm paper + coral by day, navy + electric lime by night.
  */
-const palette = {
-  mint500: '#22C55E',
-  mint600: '#16A34A',
-  mint100: '#DCFCE7',
-  amber500: '#F59E0B',
-  red500: '#EF4444',
-  slate950: '#0F172A',
-  slate900: '#111827',
-  slate800: '#1F2937',
-  slate700: '#374151',
-  slate500: '#6B7280',
-  slate400: '#9CA3AF',
-  slate300: '#D1D5DB',
-  slate200: '#E5E7EB',
-  slate100: '#F3F4F6',
-  slate50: '#F9FAFB',
-  white: '#FFFFFF',
-};
+export interface ThemeColors {
+  bg: string;
+  surface: string;
+  surfaceAlt: string;
+  border: string;
+  ink: string;
+  inkMuted: string;
+  inkFaint: string;
+  accent: string;
+  accentInk: string;
+  accentSoft: string;
+  /** Second voice: recap highlights, "shared" stickers. Same as accent in light. */
+  pop: string;
+  money: string;
+  warn: string;
+  danger: string;
+  /** Translucent scrim behind sheets. */
+  scrim: string;
+}
 
 export interface Theme {
+  name: 'paper' | 'arcade';
   dark: boolean;
-  colors: {
-    background: string;
-    surface: string;
-    surfaceElevated: string;
-    border: string;
-    text: string;
-    textMuted: string;
-    textFaint: string;
-    accent: string;
-    accentStrong: string;
-    accentSoft: string;
-    warning: string;
-    danger: string;
-    success: string;
-    onAccent: string;
-  };
+  colors: ThemeColors;
   radius: { sm: number; md: number; lg: number; xl: number; pill: number };
+  /** Cards get a hairline in light mode only; dark relies on surface contrast. */
+  cardBorderWidth: number;
   spacing: (n: number) => number;
 }
 
 const base = {
-  radius: { sm: 8, md: 12, lg: 16, xl: 24, pill: 999 },
+  radius: { sm: 10, md: 14, lg: 20, xl: 28, pill: 999 },
   spacing: (n: number) => n * 4,
 };
 
-export const lightTheme: Theme = {
+export const paperTheme: Theme = {
+  name: 'paper',
   dark: false,
+  cardBorderWidth: 1,
   colors: {
-    background: palette.slate50,
-    surface: palette.white,
-    surfaceElevated: palette.white,
-    border: palette.slate200,
-    text: palette.slate900,
-    textMuted: palette.slate500,
-    textFaint: palette.slate400,
-    accent: palette.mint500,
-    accentStrong: palette.mint600,
-    accentSoft: palette.mint100,
-    warning: palette.amber500,
-    danger: palette.red500,
-    success: palette.mint600,
-    onAccent: palette.white,
+    bg: '#F6F2EA',
+    surface: '#FFFFFF',
+    surfaceAlt: '#EFE9DE',
+    border: '#E3DCCF',
+    ink: '#15130F',
+    inkMuted: '#6B6558',
+    inkFaint: '#A39C8D',
+    accent: '#FF5A36',
+    accentInk: '#FFFFFF',
+    accentSoft: '#FFE3DB',
+    pop: '#FF5A36',
+    money: '#0E9F6E',
+    warn: '#F5B400',
+    danger: '#E2453C',
+    scrim: 'rgba(21,19,15,0.55)',
   },
   ...base,
 };
 
-export const darkTheme: Theme = {
+export const arcadeTheme: Theme = {
+  name: 'arcade',
   dark: true,
+  cardBorderWidth: 0,
   colors: {
-    background: palette.slate950,
-    surface: palette.slate900,
-    surfaceElevated: palette.slate800,
-    border: palette.slate700,
-    text: palette.slate50,
-    textMuted: palette.slate400,
-    textFaint: palette.slate500,
-    accent: palette.mint500,
-    accentStrong: palette.mint600,
-    accentSoft: '#14532D',
-    warning: palette.amber500,
-    danger: palette.red500,
-    success: palette.mint500,
-    onAccent: palette.slate950,
+    bg: '#0B0E15',
+    surface: '#151A26',
+    surfaceAlt: '#1E2533',
+    border: '#2A3242',
+    ink: '#F4F6FB',
+    inkMuted: '#9AA3B5',
+    inkFaint: '#5F6779',
+    accent: '#C8FF3D',
+    accentInk: '#0B0E15',
+    accentSoft: '#2A3A14',
+    pop: '#FF4FA3',
+    money: '#4ADE80',
+    warn: '#FBBF24',
+    danger: '#F87171',
+    scrim: 'rgba(3,5,10,0.7)',
   },
   ...base,
 };
 
-export function useTheme(): Theme {
-  return useColorScheme() === 'dark' ? darkTheme : lightTheme;
+// ---- appearance preference -------------------------------------------------
+
+export type AppearanceMode = 'system' | 'light' | 'dark';
+const APPEARANCE_KEY = 'tapntally.appearance';
+
+interface AppearanceState {
+  mode: AppearanceMode;
+  hydrated: boolean;
+  setMode: (m: AppearanceMode) => void;
+  hydrate: () => Promise<void>;
 }
 
+export const useAppearance = create<AppearanceState>((set) => ({
+  mode: 'system',
+  hydrated: false,
+  setMode: (mode) => {
+    set({ mode });
+    void AsyncStorage.setItem(APPEARANCE_KEY, mode);
+  },
+  hydrate: async () => {
+    try {
+      const raw = (await AsyncStorage.getItem(APPEARANCE_KEY)) as AppearanceMode | null;
+      if (raw === 'light' || raw === 'dark' || raw === 'system') set({ mode: raw });
+    } finally {
+      set({ hydrated: true });
+    }
+  },
+}));
+
+export function useTheme(): Theme {
+  const system = useColorScheme();
+  const mode = useAppearance((s) => s.mode);
+  const dark = mode === 'system' ? system === 'dark' : mode === 'dark';
+  return dark ? arcadeTheme : paperTheme;
+}
+
+// ---- type ------------------------------------------------------------------
+
+export const fonts = {
+  display: 'SpaceGrotesk_700Bold',
+  displayMedium: 'SpaceGrotesk_500Medium',
+  body: 'Inter_400Regular',
+  bodyMedium: 'Inter_500Medium',
+  bodySemi: 'Inter_600SemiBold',
+} as const;
+
 export const typography = {
-  display: { fontSize: 34, fontWeight: '800' as const, letterSpacing: -0.5 },
-  title: { fontSize: 22, fontWeight: '700' as const },
-  heading: { fontSize: 17, fontWeight: '600' as const },
-  body: { fontSize: 15, fontWeight: '400' as const },
-  caption: { fontSize: 13, fontWeight: '400' as const },
-  mono: { fontVariant: ['tabular-nums'] as const },
-};
+  hero: { fontFamily: fonts.display, fontSize: 40, lineHeight: 44, letterSpacing: -1 },
+  display: { fontFamily: fonts.display, fontSize: 30, lineHeight: 36, letterSpacing: -0.5 },
+  title: { fontFamily: fonts.display, fontSize: 22, lineHeight: 28 },
+  money: { fontFamily: fonts.displayMedium, fontSize: 17, lineHeight: 22, fontVariant: ['tabular-nums'] as const },
+  heading: { fontFamily: fonts.bodySemi, fontSize: 16, lineHeight: 22 },
+  body: { fontFamily: fonts.body, fontSize: 15, lineHeight: 22 },
+  caption: { fontFamily: fonts.bodyMedium, fontSize: 13, lineHeight: 18 },
+  micro: { fontFamily: fonts.bodySemi, fontSize: 11, lineHeight: 14, letterSpacing: 0.6, textTransform: 'uppercase' as const },
+} as const;
+
+export type TypographyVariant = keyof typeof typography;

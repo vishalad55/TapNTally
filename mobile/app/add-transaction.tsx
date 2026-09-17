@@ -1,13 +1,13 @@
 import { PaymentMethod, rupeesToPaise } from '@tapntally/shared';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { ScrollView, Switch, TextInput, View } from 'react-native';
 import { ApiClientError } from '../src/api/client';
 import { useCreateTransaction } from '../src/api/hooks';
 import { CategoryPicker } from '../src/components/CategoryPicker';
 import { Button, Card, Chip, Row, SectionHeader, Text } from '../src/components/ui';
 import { useSession } from '../src/store/session';
-import { useTheme } from '../src/theme';
+import { type Theme, fonts, useTheme } from '../src/theme';
 
 const METHODS: Array<{ key: PaymentMethod; label: string }> = [
   { key: PaymentMethod.UPI, label: 'UPI' },
@@ -42,21 +42,23 @@ export default function AddTransaction() {
   };
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: t.colors.background }} contentContainerStyle={{ padding: 16, gap: 8, paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
-      <Card style={{ gap: 10 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: t.colors.bg }} contentContainerStyle={{ padding: 20, gap: 8, paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
+      <Card style={{ gap: 12, paddingVertical: 22 }}>
         <Row gap={6}>
-          <Text variant="display">₹</Text>
+          <Text variant="hero" muted>
+            ₹
+          </Text>
           <TextInput
             value={rupees}
             onChangeText={setRupees}
             keyboardType="decimal-pad"
             placeholder="0"
-            placeholderTextColor={t.colors.textFaint}
+            placeholderTextColor={t.colors.inkFaint}
             autoFocus
-            style={{ flex: 1, fontSize: 34, fontWeight: '800', color: t.colors.text, fontVariant: ['tabular-nums'] }}
+            style={{ flex: 1, fontSize: 40, fontFamily: fonts.display, color: t.colors.ink, fontVariant: ['tabular-nums'] }}
           />
         </Row>
-        <TextInput value={merchant} onChangeText={setMerchant} placeholder="Where? e.g. Corner tea stall" placeholderTextColor={t.colors.textFaint} style={inputStyle(t)} />
+        <TextInput value={merchant} onChangeText={setMerchant} placeholder="Where? e.g. Corner tea stall" placeholderTextColor={t.colors.inkFaint} style={inputStyle(t)} />
       </Card>
 
       <SectionHeader title="Paid with" />
@@ -66,7 +68,7 @@ export default function AddTransaction() {
         ))}
       </Row>
 
-      <SectionHeader title="Category (optional — we'll guess)" />
+      <SectionHeader title="Category" eyebrow="optional — we'll guess" />
       <CategoryPicker value={categoryId} onChange={(c) => setCategoryId(c.id === categoryId ? null : c.id)} compact />
 
       {me?.householdId ? (
@@ -86,12 +88,11 @@ export default function AddTransaction() {
   );
 }
 
-const inputStyle = (t: ReturnType<typeof useTheme>) => ({
-  borderWidth: StyleSheet.hairlineWidth,
-  borderColor: t.colors.border,
+const inputStyle = (t: Theme) => ({
   borderRadius: t.radius.md,
-  padding: 12,
-  color: t.colors.text,
-  backgroundColor: t.colors.background,
+  padding: 14,
+  color: t.colors.ink,
+  backgroundColor: t.colors.surfaceAlt,
+  fontFamily: fonts.body,
   fontSize: 15,
 });

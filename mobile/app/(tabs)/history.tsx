@@ -3,18 +3,13 @@ import { PaymentMethod, TransactionSource } from '@tapntally/shared';
 import { format, isToday, isYesterday, startOfMonth, subDays, subMonths } from 'date-fns';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { useCategories, useTransactions } from '../../src/api/hooks';
 import { TransactionRow } from '../../src/components/TransactionRow';
 import { Chip, EmptyState, ErrorBanner, Loading, Row, Screen, Text } from '../../src/components/ui';
 import { useSession } from '../../src/store/session';
-import { useTheme } from '../../src/theme';
+import { fonts, useTheme } from '../../src/theme';
 
-/**
- * Search & filter, modelled on Google Pay / Amazon order history: search bar
- * at the top with instant results, one row of filter chips, results grouped
- * by day. No custom gestures to learn.
- */
 type DateKey = 'month' | 'last_month' | '90d' | 'all';
 type AmountKey = 'lt500' | '500_2k' | 'gt2k' | 'all';
 
@@ -44,6 +39,7 @@ const SOURCE_OPTS: Array<{ key: TransactionSource; label: string }> = [
 
 type Item = { type: 'header'; key: string; label: string } | { type: 'tx'; key: string; tx: Transaction };
 
+/** Search & filter, modelled on Google Pay / Amazon order history: no new conventions to learn. */
 export default function History() {
   const t = useTheme();
   const router = useRouter();
@@ -75,16 +71,7 @@ export default function History() {
             ? { from: subDays(now, 90).toISOString() }
             : {};
     const amt = amount === 'lt500' ? { maxPaise: 49_999 } : amount === '500_2k' ? { minPaise: 50_000, maxPaise: 200_000 } : amount === 'gt2k' ? { minPaise: 200_001 } : {};
-    return {
-      q: q || undefined,
-      categoryIds: category ? [category] : undefined,
-      paymentMethods: method ? [method] : undefined,
-      sources: source ? [source] : undefined,
-      scope,
-      limit: 40,
-      ...range,
-      ...amt,
-    };
+    return { q: q || undefined, categoryIds: category ? [category] : undefined, paymentMethods: method ? [method] : undefined, sources: source ? [source] : undefined, scope, limit: 40, ...range, ...amt };
   }, [q, date, amount, category, method, source, scope]);
 
   const feed = useTransactions(query);
@@ -114,31 +101,19 @@ export default function History() {
 
   return (
     <Screen>
-      <View style={{ gap: 10, paddingTop: 8 }}>
+      <View style={{ gap: 10, paddingTop: 12 }}>
+        <Text variant="title">History</Text>
         <Row gap={10}>
-          <View
-            style={{
-              flex: 1,
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 8,
-              backgroundColor: t.colors.surface,
-              borderRadius: t.radius.md,
-              borderWidth: StyleSheet.hairlineWidth,
-              borderColor: t.colors.border,
-              paddingHorizontal: 12,
-            }}
-          >
+          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: t.colors.surfaceAlt, borderRadius: t.radius.pill, paddingHorizontal: 16 }}>
             <Text muted>🔍</Text>
             <TextInput
               value={text}
               onChangeText={setText}
               placeholder="Search merchants"
-              placeholderTextColor={t.colors.textFaint}
+              placeholderTextColor={t.colors.inkFaint}
               autoCorrect={false}
               returnKeyType="search"
-              clearButtonMode="while-editing"
-              style={{ flex: 1, paddingVertical: 12, color: t.colors.text, fontSize: 15 }}
+              style={{ flex: 1, paddingVertical: 13, color: t.colors.ink, fontSize: 15, fontFamily: fonts.body }}
             />
             {text ? (
               <Pressable onPress={() => setText('')} hitSlop={8}>
@@ -152,7 +127,7 @@ export default function History() {
         </Row>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-          {activeFilters > 0 ? <Chip label={`Clear (${activeFilters})`} onPress={clear} /> : null}
+          {activeFilters > 0 ? <Chip label={`Clear (${activeFilters})`} selected onPress={clear} /> : null}
           {DATE_OPTS.map((o) => (
             <Chip key={o.key} label={o.label} selected={date === o.key} onPress={() => setDate(o.key)} />
           ))}
@@ -181,7 +156,7 @@ export default function History() {
         keyExtractor={(i) => i.key}
         renderItem={({ item }) =>
           item.type === 'header' ? (
-            <Text variant="caption" muted style={{ marginTop: 14, marginBottom: 2, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <Text variant="micro" faint style={{ marginTop: 16, marginBottom: 4 }}>
               {item.label}
             </Text>
           ) : (
@@ -193,15 +168,13 @@ export default function History() {
         keyboardShouldPersistTaps="handled"
         ListHeaderComponent={
           feed.data ? (
-            <Text variant="caption" faint style={{ marginTop: 6 }}>
+            <Text variant="caption" faint style={{ marginTop: 8 }}>
               {feed.data.pages[0]?.total ?? 0} result{feed.data.pages[0]?.total === 1 ? '' : 's'}
             </Text>
           ) : null
         }
-        ListEmptyComponent={
-          feed.isLoading ? <Loading /> : feed.error ? <ErrorBanner message="Couldn't search right now." onRetry={() => void feed.refetch()} /> : <EmptyState icon="🔎" title="No matches" body="Try a different merchant name or loosen a filter." />
-        }
-        ListFooterComponent={feed.isFetchingNextPage ? <Loading /> : <View style={{ height: 120 }} />}
+        ListEmptyComponent={feed.isLoading ? <Loading /> : feed.error ? <ErrorBanner message="Couldn't search right now." onRetry={() => void feed.refetch()} /> : <EmptyState icon="🔎" title="No matches" body="Try a different merchant name or loosen a filter." />}
+        ListFooterComponent={feed.isFetchingNextPage ? <Loading /> : <View style={{ height: 130 }} />}
         showsVerticalScrollIndicator={false}
       />
     </Screen>

@@ -6,6 +6,7 @@
   "scripts": {
     "start": "expo start --dev-client",
     "start:go": "expo start",
+    "web": "expo start --web --port 8081",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "prebuild": "expo prebuild",
@@ -13,6 +14,9 @@
     "lint": "eslint \"src/**/*.{ts,tsx}\" \"app/**/*.{ts,tsx}\""
   },
   "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.2",
+    "@expo-google-fonts/space-grotesk": "^0.4.1",
+    "@expo/metro-runtime": "~57.0.15",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/slider": "5.2.0",
     "@react-native-google-signin/google-signin": "^16.1.5",
@@ -24,6 +28,7 @@
     "expo-constants": "~57.0.18",
     "expo-crypto": "~57.0.3",
     "expo-device": "~57.0.2",
+    "expo-font": "~57.0.4",
     "expo-haptics": "~57.0.3",
     "expo-linking": "~57.0.10",
     "expo-notifications": "~57.0.19",

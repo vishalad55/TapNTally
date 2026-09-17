@@ -4,11 +4,11 @@ import { useState } from 'react';
 import { RefreshControl, ScrollView, View } from 'react-native';
 import { useRecap } from '../../src/api/hooks';
 import { TransactionRow } from '../../src/components/TransactionRow';
-import { Card, Chip, ErrorBanner, Loading, Row, Screen, SectionHeader, Text } from '../../src/components/ui';
+import { Card, Chip, ErrorBanner, Loading, Reveal, Row, Screen, SectionHeader, Text } from '../../src/components/ui';
 import { useSession } from '../../src/store/session';
 import { useTheme } from '../../src/theme';
 
-/** The recap: a headline, a couple of bars, and a handful of human sentences. */
+/** The recap: one big headline, two bars, and a handful of human sentences. */
 export default function Insights() {
   const t = useTheme();
   const router = useRouter();
@@ -24,12 +24,15 @@ export default function Insights() {
     <Screen>
       <ScrollView
         refreshControl={<RefreshControl refreshing={recap.isRefetching} onRefresh={() => void recap.refetch()} tintColor={t.colors.accent} />}
-        contentContainerStyle={{ paddingBottom: 140, gap: 10 }}
+        contentContainerStyle={{ paddingBottom: 150, gap: 10 }}
         showsVerticalScrollIndicator={false}
       >
-        <Row style={{ justifyContent: 'space-between', marginTop: 8 }}>
+        <View style={{ marginTop: 12 }}>
+          <Text variant="micro" faint>
+            Recap
+          </Text>
           <Text variant="title">Your {label} in money</Text>
-        </Row>
+        </View>
         <Row gap={8}>
           <Chip label="This month" selected={period === 'monthly'} onPress={() => setPeriod('monthly')} />
           <Chip label="This week" selected={period === 'weekly'} onPress={() => setPeriod('weekly')} />
@@ -41,27 +44,32 @@ export default function Insights() {
 
         {r ? (
           <>
-            <Card style={{ backgroundColor: t.colors.accentSoft, borderColor: 'transparent', gap: 10 }}>
-              <Text variant="title" style={{ lineHeight: 30 }}>
-                {r.headline}
-              </Text>
-              <View style={{ gap: 6, marginTop: 4 }}>
-                <Bar label={`This ${label}`} value={r.totalPaise} max={max} color={t.colors.accent} />
-                <Bar label={`Last ${label}`} value={r.previousTotalPaise} max={max} color={t.colors.textFaint} />
-              </View>
-            </Card>
+            <Reveal>
+              <Card tone="accent" style={{ gap: 14, padding: 22 }}>
+                <Text variant="display" style={{ lineHeight: 36 }}>
+                  {r.headline}
+                </Text>
+                <View style={{ gap: 8 }}>
+                  <Bar label={`This ${label}`} value={r.totalPaise} max={max} color={t.colors.accent} />
+                  <Bar label={`Last ${label}`} value={r.previousTotalPaise} max={max} color={t.colors.inkFaint} />
+                </View>
+              </Card>
+            </Reveal>
 
             <SectionHeader title="Highlights" />
             {r.highlights.map((h, i) => (
-              <Card key={i} style={{ paddingVertical: 14 }}>
-                <Text style={{ lineHeight: 22 }}>{h}</Text>
-              </Card>
+              <Reveal key={i} index={i + 1}>
+                <Card style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+                  <View style={{ width: 8, alignSelf: 'stretch', borderRadius: 4, backgroundColor: i % 2 ? t.colors.pop : t.colors.accent }} />
+                  <Text style={{ flex: 1, lineHeight: 22 }}>{h}</Text>
+                </Card>
+              </Reveal>
             ))}
 
             {r.priciestPurchase ? (
               <>
                 <SectionHeader title="Biggest purchase" />
-                <Card style={{ paddingVertical: 0 }}>
+                <Card style={{ paddingVertical: 2 }}>
                   <TransactionRow tx={r.priciestPurchase} onPress={() => router.push({ pathname: '/transaction/[id]', params: { id: r.priciestPurchase!.id } })} />
                 </Card>
               </>
@@ -76,17 +84,15 @@ export default function Insights() {
 function Bar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
   const t = useTheme();
   return (
-    <View style={{ gap: 3 }}>
+    <View style={{ gap: 4 }}>
       <Row style={{ justifyContent: 'space-between' }}>
         <Text variant="caption" muted>
           {label}
         </Text>
-        <Text variant="caption" style={{ fontWeight: '700', fontVariant: ['tabular-nums'] }}>
-          {formatPaise(value, { showDecimals: false })}
-        </Text>
+        <Text variant="money">{formatPaise(value, { showDecimals: false })}</Text>
       </Row>
-      <View style={{ height: 10, borderRadius: 5, backgroundColor: t.colors.surface, overflow: 'hidden' }}>
-        <View style={{ width: `${Math.max(2, (value / max) * 100)}%`, height: '100%', backgroundColor: color, borderRadius: 5 }} />
+      <View style={{ height: 12, borderRadius: 6, backgroundColor: t.colors.surface, overflow: 'hidden' }}>
+        <View style={{ width: `${Math.max(2, (value / max) * 100)}%`, height: '100%', backgroundColor: color, borderRadius: 6 }} />
       </View>
     </View>
   );

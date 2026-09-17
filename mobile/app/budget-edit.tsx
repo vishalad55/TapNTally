@@ -2,13 +2,13 @@ import Slider from '@react-native-community/slider';
 import { BudgetPeriod, BudgetScope, formatPaise, rupeesToPaise } from '@tapntally/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, ScrollView, TextInput, View } from 'react-native';
 import { ApiClientError } from '../src/api/client';
 import { useDeleteBudget, useUpsertBudget } from '../src/api/hooks';
 import { CategoryPicker } from '../src/components/CategoryPicker';
 import { Button, Chip, Row, SectionHeader, Text } from '../src/components/ui';
 import { useSession } from '../src/store/session';
-import { useTheme } from '../src/theme';
+import { fonts, useTheme } from '../src/theme';
 
 const MIN_RUPEES = 500;
 const MAX_RUPEES = 50_000;
@@ -43,18 +43,11 @@ export default function BudgetEdit() {
   const remove = () =>
     Alert.alert('Remove budget?', 'You can always set it again.', [
       { text: 'Keep', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: async () => {
-          await del.mutateAsync(params.id!);
-          router.back();
-        },
-      },
+      { text: 'Remove', style: 'destructive', onPress: async () => { await del.mutateAsync(params.id!); router.back(); } },
     ]);
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: t.colors.background }} contentContainerStyle={{ padding: 16, gap: 8, paddingBottom: 60 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: t.colors.bg }} contentContainerStyle={{ padding: 20, gap: 8, paddingBottom: 60 }}>
       {user?.householdId ? (
         <>
           <SectionHeader title="Who is this for?" />
@@ -62,11 +55,6 @@ export default function BudgetEdit() {
             <Chip label="👤 Just me" selected={scope === BudgetScope.USER} onPress={() => setScope(BudgetScope.USER)} />
             <Chip label="👨‍👩‍👧 Household" selected={scope === BudgetScope.HOUSEHOLD} onPress={() => setScope(BudgetScope.HOUSEHOLD)} />
           </Row>
-          {scope === BudgetScope.HOUSEHOLD ? (
-            <Text variant="caption" muted>
-              Counts purchases any member marks as shared. Everyone gets the alert.
-            </Text>
-          ) : null}
         </>
       ) : null}
 
@@ -74,10 +62,8 @@ export default function BudgetEdit() {
       <CategoryPicker value={categoryId} onChange={(c) => setCategoryId(c.id)} compact />
 
       <SectionHeader title="Limit" />
-      <View style={{ alignItems: 'center', gap: 4 }}>
-        <Text variant="display" style={{ fontVariant: ['tabular-nums'] }}>
-          {formatPaise(rupeesToPaise(rupees), { showDecimals: false })}
-        </Text>
+      <View style={{ alignItems: 'center', gap: 2 }}>
+        <Text variant="hero">{formatPaise(rupeesToPaise(rupees), { showDecimals: false })}</Text>
         <Text variant="caption" muted>
           per {period === BudgetPeriod.WEEKLY ? 'week' : 'month'}
         </Text>
@@ -89,24 +75,16 @@ export default function BudgetEdit() {
         value={Math.min(MAX_RUPEES, Math.max(MIN_RUPEES, rupees))}
         onValueChange={setRupees}
         minimumTrackTintColor={t.colors.accent}
-        maximumTrackTintColor={t.colors.border}
+        maximumTrackTintColor={t.colors.surfaceAlt}
         thumbTintColor={t.colors.accent}
       />
       <Row gap={8}>
-        <Text muted>or type: ₹</Text>
+        <Text muted>or type ₹</Text>
         <TextInput
           keyboardType="number-pad"
           value={String(Math.round(rupees))}
           onChangeText={(v) => setRupees(Math.max(0, Number(v.replace(/[^0-9]/g, '')) || 0))}
-          style={{
-            flex: 1,
-            borderWidth: StyleSheet.hairlineWidth,
-            borderColor: t.colors.border,
-            borderRadius: t.radius.md,
-            padding: 10,
-            color: t.colors.text,
-            backgroundColor: t.colors.surface,
-          }}
+          style={{ flex: 1, borderRadius: t.radius.md, padding: 12, color: t.colors.ink, backgroundColor: t.colors.surfaceAlt, fontFamily: fonts.displayMedium, fontSize: 16 }}
         />
       </Row>
 

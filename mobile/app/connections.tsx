@@ -6,8 +6,7 @@ import React, { useState } from 'react';
 import { Alert, ScrollView, View } from 'react-native';
 import { ApiClientError } from '../src/api/client';
 import { useConnectionMutations, useConnections } from '../src/api/hooks';
-import { Badge } from '../src/components/TransactionRow';
-import { Button, Card, ErrorBanner, Loading, Row, Text } from '../src/components/ui';
+import { Badge, Button, Card, ErrorBanner, Loading, Row, Text } from '../src/components/ui';
 import { collectPaymentSms, markScanned, requestSmsPermission, resetScanCursor, smsSupported } from '../src/sms';
 import { useTheme } from '../src/theme';
 
@@ -94,7 +93,7 @@ export default function Connections() {
   if (conns.error) return <ErrorBanner message="Couldn't load connections." onRetry={() => void conns.refetch()} />;
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: t.colors.background }} contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 60 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: t.colors.bg }} contentContainerStyle={{ padding: 20, gap: 12, paddingBottom: 60 }}>
       <Text muted>Online orders don't come through a terminal, so we read the confirmations instead — narrowly.</Text>
 
       <ConnectionCard
@@ -134,7 +133,7 @@ export default function Connections() {
           !smsSupported ? null : sms?.status === ConnectionStatus.ACTIVE ? (
             <Row gap={8}>
               <Button title="Scan new" variant="secondary" onPress={() => scanSms(false)} loading={busy === 'sms'} style={{ flex: 1 }} />
-              <Button title="Rescan 6 months" variant="ghost" onPress={() => scanSms(true)} />
+              <Button title="Rescan" variant="ghost" onPress={() => scanSms(true)} />
               <Button title="Stop" variant="ghost" onPress={disconnectSms} />
             </Row>
           ) : (
@@ -152,12 +151,14 @@ function ConnectionCard({ icon, title, conn, trust, actions }: { icon: string; t
   const t = useTheme();
   const status = conn?.status ?? ConnectionStatus.DISCONNECTED;
   const s = STATUS_LABEL[status];
-  const color = s.tone === 'ok' ? t.colors.accent : s.tone === 'warn' ? t.colors.warning : s.tone === 'bad' ? t.colors.danger : t.colors.textFaint;
+  const color = s.tone === 'ok' ? t.colors.money : s.tone === 'warn' ? t.colors.warn : s.tone === 'bad' ? t.colors.danger : t.colors.inkFaint;
   return (
-    <Card style={{ gap: 10 }}>
+    <Card style={{ gap: 12 }}>
       <Row style={{ justifyContent: 'space-between' }}>
-        <Row gap={8}>
-          <Text style={{ fontSize: 24 }}>{icon}</Text>
+        <Row gap={10}>
+          <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: t.colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ fontSize: 22 }}>{icon}</Text>
+          </View>
           <Text variant="title">{title}</Text>
         </Row>
         <Badge label={s.label} color={color} />
@@ -169,7 +170,7 @@ function ConnectionCard({ icon, title, conn, trust, actions }: { icon: string; t
           {conn.lastError ? `\n⚠️ ${conn.lastError}` : ''}
         </Text>
       ) : null}
-      <View style={{ backgroundColor: t.colors.background, borderRadius: t.radius.md, padding: 10 }}>
+      <View style={{ backgroundColor: t.colors.surfaceAlt, borderRadius: t.radius.md, padding: 12 }}>
         <Text variant="caption" style={{ lineHeight: 18 }}>
           🔒 {trust}
         </Text>

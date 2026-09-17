@@ -60,7 +60,6 @@ export function TapFlow() {
         title: e?.code === 'NFC_MALFORMED_BILL' ? "Couldn't read that bill" : "Couldn't save the bill",
         message: e?.message ?? 'Please try again.',
         details: (e?.details as { errors?: string[] } | undefined)?.errors,
-        // Network / server errors are retryable; validation errors need a fresh tap.
         retryable: true,
       });
     }
@@ -71,22 +70,23 @@ export function TapFlow() {
     setState({ kind: 'idle' });
   }, [cancel]);
 
+  const sheet = { backgroundColor: t.colors.surface, borderRadius: t.radius.xl } as const;
+
   return (
     <>
       <NfcFab onPress={start} active={state.kind !== 'idle'} />
 
-      {/* Scanning / posting sheet */}
       <Modal visible={state.kind === 'scanning' || state.kind === 'posting'} transparent animationType="fade" onRequestClose={dismiss}>
-        <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: '#00000088' }]} onPress={state.kind === 'scanning' ? dismiss : undefined} />
-        <View style={[styles.sheet, { backgroundColor: t.colors.surface, borderRadius: t.radius.xl }]}>
+        <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.colors.scrim }]} onPress={state.kind === 'scanning' ? dismiss : undefined} />
+        <View style={[styles.sheet, sheet]}>
           <View style={{ alignItems: 'center', gap: 14 }}>
-            <View style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: t.colors.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
-              {state.kind === 'posting' ? <ActivityIndicator size="large" color={t.colors.accent} /> : <Text style={{ fontSize: 44 }}>📡</Text>}
+            <View style={{ width: 104, height: 104, borderRadius: 52, backgroundColor: t.colors.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
+              {state.kind === 'posting' ? <ActivityIndicator size="large" color={t.colors.accent} /> : <Text style={{ fontSize: 48 }}>📡</Text>}
             </View>
-            <Text variant="title">{state.kind === 'posting' ? 'Saving your bill…' : 'Hold near the terminal'}</Text>
+            <Text variant="title">{state.kind === 'posting' ? 'Filing your bill…' : 'Hold near the terminal'}</Text>
             <Text muted style={{ textAlign: 'center' }}>
               {state.kind === 'posting'
-                ? 'Categorising and filing it for you.'
+                ? 'Categorising it and updating your month.'
                 : readerKind === 'mock'
                   ? 'Demo terminal — simulating a tap.'
                   : 'Keep your phone still against the NFC mark on the terminal.'}
@@ -96,13 +96,12 @@ export function TapFlow() {
         </View>
       </Modal>
 
-      {/* Error sheet */}
       <Modal visible={state.kind === 'error'} transparent animationType="fade" onRequestClose={dismiss}>
-        <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: '#00000088' }]} onPress={dismiss} />
+        <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.colors.scrim }]} onPress={dismiss} />
         {state.kind === 'error' ? (
-          <View style={[styles.sheet, { backgroundColor: t.colors.surface, borderRadius: t.radius.xl, gap: 12 }]}>
+          <View style={[styles.sheet, sheet, { gap: 12 }]}>
             <Row gap={10}>
-              <Text style={{ fontSize: 28 }}>😕</Text>
+              <Text style={{ fontSize: 30 }}>😬</Text>
               <Text variant="title" style={{ flex: 1 }}>
                 {state.title}
               </Text>
@@ -131,7 +130,6 @@ export function TapFlow() {
         ) : null}
       </Modal>
 
-      {/* Receipt flash */}
       <Modal visible={state.kind === 'flash'} transparent animationType="none" onRequestClose={() => setState({ kind: 'idle' })}>
         {state.kind === 'flash' ? (
           <ReceiptFlash
@@ -161,5 +159,5 @@ const TITLES: Record<Exclude<NfcReadResult['status'], 'success' | 'cancelled'>, 
 };
 
 const styles = StyleSheet.create({
-  sheet: { position: 'absolute', left: 16, right: 16, bottom: 40, padding: 24 },
+  sheet: { position: 'absolute', left: 16, right: 16, bottom: 36, padding: 26 },
 });
