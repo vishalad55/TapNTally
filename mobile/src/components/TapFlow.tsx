@@ -2,11 +2,12 @@ import type { Transaction } from '@tapntally/shared';
 import * as Crypto from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { ApiClientError } from '../api/client';
 import { useIngestNfcBill } from '../api/hooks';
 import { useNfcTap, type NfcReadResult } from '../nfc';
+import { useTapRequest } from '../store/tap';
 import { useTheme } from '../theme';
 import { Icon, TapGlyph } from '../theme/icons';
 import { NfcFab } from './NfcFab';
@@ -65,6 +66,16 @@ export function TapFlow() {
       });
     }
   }, [tap, ingest]);
+
+  // Quick-action tiles elsewhere ask for a scan through the tap store.
+  const requestId = useTapRequest((s) => s.requestId);
+  const seen = useRef(requestId);
+  useEffect(() => {
+    if (requestId !== seen.current) {
+      seen.current = requestId;
+      void start();
+    }
+  }, [requestId, start]);
 
   const dismiss = useCallback(async () => {
     await cancel();

@@ -3,6 +3,7 @@ import { Animated, Easing, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fonts, useTheme } from '../theme';
 import { TapGlyph } from '../theme/icons';
+import { TAB_BAR_HEIGHT } from './TabBar';
 import { Text } from './ui';
 
 /**
@@ -25,7 +26,7 @@ export function NfcFab({ onPress, active }: { onPress: () => void; active?: bool
   const haloOpacity = halo.interpolate({ inputRange: [0, 0.7, 1], outputRange: [active ? 0.5 : 0.35, 0.12, 0] });
 
   return (
-    <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: 58 + insets.bottom, alignItems: 'center' }}>
+    <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: TAB_BAR_HEIGHT - 8 + insets.bottom, alignItems: 'center' }}>
       <Animated.View pointerEvents="none" style={{ position: 'absolute', width: 76, height: 76, borderRadius: 38, backgroundColor: t.colors.accent, opacity: haloOpacity, transform: [{ scale: haloScale }] }} />
       <Pressable
         onPress={onPress}

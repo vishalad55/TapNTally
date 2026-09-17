@@ -10,6 +10,7 @@ import { Badge, Button, Card, Chip, ErrorBanner, Loading, Row, SectionHeader, St
 import { useSession } from '../../src/store/session';
 import { type Theme, fonts, useTheme } from '../../src/theme';
 import { CategoryTile } from '../../src/theme/icons';
+import { catColor } from '../../src/theme/palette';
 
 const METHODS: Array<{ key: PaymentMethod; label: string }> = [
   { key: PaymentMethod.UPI, label: 'UPI' },
@@ -83,7 +84,7 @@ export default function TransactionDetail() {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: t.colors.bg }} contentContainerStyle={{ padding: 20, gap: 10, paddingBottom: 80 }} keyboardShouldPersistTaps="handled">
       <Card style={{ alignItems: 'center', gap: 8, paddingVertical: 24 }}>
-        <CategoryTile slug={d.category.slug} color={d.category.color} size={64} />
+        <CategoryTile slug={d.category.slug} color={catColor(d.category, t)} size={64} />
         <Text variant="hero">{formatPaise(d.amountPaise)}</Text>
         <Text variant="heading">{d.merchant}</Text>
         <Text variant="caption" muted>

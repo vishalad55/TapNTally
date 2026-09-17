@@ -3,6 +3,7 @@ import { BudgetScope, formatPaise } from '@tapntally/shared';
 import { Pressable, View } from 'react-native';
 import { type Theme, useTheme } from '../theme';
 import { CategoryTile } from '../theme/icons';
+import { catColor } from '../theme/palette';
 import { Card, Row, Sticker, Text } from './ui';
 
 /** Money-green → butter → coral as spend approaches the cap. */
@@ -21,7 +22,7 @@ export function BudgetBar({ progress, onPress }: { progress: BudgetProgress; onP
       <Card style={{ gap: 12 }}>
         <Row style={{ justifyContent: 'space-between' }}>
           <Row gap={10}>
-            <CategoryTile slug={budget.category.slug} color={budget.category.color} size={40} />
+            <CategoryTile slug={budget.category.slug} color={catColor(budget.category, t)} size={40} />
             <View>
               <Text variant="heading">{budget.category.name}</Text>
               <Text variant="caption" muted>

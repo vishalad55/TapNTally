@@ -1,8 +1,12 @@
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { SpaceGrotesk_500Medium, SpaceGrotesk_700Bold } from '@expo-google-fonts/space-grotesk';
 import { useFonts } from 'expo-font';
+import { useEffect, useState } from 'react';
 
-/** Loads the brand fonts once at app start. Returns true when ready (or on error, so the app never blocks). */
+/** Never keep the user on a blank screen for type: after this the app renders with system fallbacks. */
+const FONT_WAIT_MS = 2500;
+
+/** Loads the brand fonts once at app start. Returns true when ready, on error, or after a short grace period. */
 export function useBrandFonts(): boolean {
   const [loaded, error] = useFonts({
     SpaceGrotesk_700Bold,
@@ -11,5 +15,10 @@ export function useBrandFonts(): boolean {
     Inter_500Medium,
     Inter_600SemiBold,
   });
-  return loaded || !!error;
+  const [timedOut, setTimedOut] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setTimedOut(true), FONT_WAIT_MS);
+    return () => clearTimeout(id);
+  }, []);
+  return loaded || !!error || timedOut;
 }

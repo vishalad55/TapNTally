@@ -182,7 +182,7 @@ export function Chip({
 }
 
 /** Rotated pill label — the "sticker" motif for VERIFIED / SHARED badges. */
-export function Sticker({ label, color, tilt = -3 }: { label: string; color: string; tilt?: number }) {
+export function Sticker({ label, color, tilt = 0 }: { label: string; color: string; tilt?: number }) {
   return (
     <View style={{ paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, backgroundColor: color, transform: [{ rotate: `${tilt}deg` }] }}>
       <RNText style={[typography.micro, { color: contrastInk(color) }]}>{label}</RNText>
@@ -245,14 +245,16 @@ export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: (
 export function SectionHeader({ title, right, eyebrow }: { title: string; right?: React.ReactNode; eyebrow?: string }) {
   const t = useTheme();
   return (
-    <Row style={{ justifyContent: 'space-between', marginTop: t.spacing(6), marginBottom: t.spacing(3) }}>
-      <View>
+    <Row style={{ justifyContent: 'space-between', marginTop: t.spacing(6), marginBottom: t.spacing(3) }} gap={12}>
+      <View style={{ flex: 1, minWidth: 0 }}>
         {eyebrow ? (
           <Text variant="micro" faint>
             {eyebrow}
           </Text>
         ) : null}
-        <Text variant="title">{title}</Text>
+        <Text variant="title" numberOfLines={1}>
+          {title}
+        </Text>
       </View>
       {right}
     </Row>

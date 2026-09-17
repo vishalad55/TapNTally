@@ -4,6 +4,7 @@ import { format, isToday, isYesterday } from 'date-fns';
 import { Pressable, View } from 'react-native';
 import { useTheme } from '../theme';
 import { CategoryTile } from '../theme/icons';
+import { catColor } from '../theme/palette';
 import { Badge, Row, Sticker, Text } from './ui';
 
 export { Badge } from './ui';
@@ -39,24 +40,16 @@ export function TransactionRow({ tx, onPress, showShared = true }: { tx: Transac
         backgroundColor: pressed ? t.colors.surfaceAlt : 'transparent',
       })}
     >
-      <CategoryTile slug={tx.category.slug} color={tx.category.color} />
-      <View style={{ flex: 1, gap: 3 }}>
+      <CategoryTile slug={tx.category.slug} color={catColor(tx.category, t)} />
+      <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
         <Text variant="heading" numberOfLines={1}>
           {tx.merchant}
         </Text>
-        <Row gap={6}>
-          <Text variant="caption" muted numberOfLines={1}>
-            {tx.category.name}
-          </Text>
-          {needsCheck ? (
-            <Text variant="caption" color={t.colors.warn}>
-              · Review
-            </Text>
-          ) : null}
-          <Text variant="caption" faint numberOfLines={1}>
-            · {friendlyDate(tx.occurredAt)}
-          </Text>
-        </Row>
+        <Text variant="caption" muted numberOfLines={1}>
+          {tx.category.name}
+          {needsCheck ? <Text variant="caption" color={t.colors.warn}>{' · Review'}</Text> : null}
+          <Text variant="caption" faint>{` · ${friendlyDate(tx.occurredAt)}`}</Text>
+        </Text>
       </View>
       <View style={{ alignItems: 'flex-end', gap: 5 }}>
         <Text variant="money">{formatPaise(tx.amountPaise)}</Text>

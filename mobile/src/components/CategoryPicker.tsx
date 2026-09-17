@@ -3,6 +3,7 @@ import { Pressable, View } from 'react-native';
 import { useCategories } from '../api/hooks';
 import { useTheme } from '../theme';
 import { Icon, categoryIconName } from '../theme/icons';
+import { catColor, tint } from '../theme/palette';
 import { Loading, Text } from './ui';
 
 /** Grid of category tiles. Used for overrides, manual entry and budgets. */
@@ -14,6 +15,7 @@ export function CategoryPicker({ value, onChange, compact }: { value: string | n
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
       {(cats.data ?? []).map((c) => {
         const selected = c.id === value;
+        const color = catColor(c, t);
         return (
           <Pressable
             key={c.id}
@@ -26,13 +28,13 @@ export function CategoryPicker({ value, onChange, compact }: { value: string | n
               paddingVertical: compact ? 9 : 13,
               paddingHorizontal: 10,
               borderRadius: t.radius.md,
-              backgroundColor: selected ? c.color + '33' : t.colors.surfaceAlt,
+              backgroundColor: selected ? tint(color, '33') : t.colors.surfaceAlt,
               borderWidth: 2,
-              borderColor: selected ? c.color : 'transparent',
+              borderColor: selected ? color : 'transparent',
               opacity: pressed ? 0.8 : 1,
             })}
           >
-            <Icon name={categoryIconName(c.slug)} size={compact ? 16 : 20} color={selected ? c.color : t.colors.inkMuted} />
+            <Icon name={categoryIconName(c.slug)} size={compact ? 16 : 20} color={selected ? color : t.colors.inkMuted} />
             <Text variant={selected ? 'heading' : 'caption'} style={{ flex: 1 }} numberOfLines={1}>
               {c.name}
             </Text>

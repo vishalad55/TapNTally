@@ -50,7 +50,45 @@ Near-black navy ground, **electric lime** as the action colour, **hot pink** as 
 | `warn` | `#FBBF24` | warning |
 | `danger` | `#F87171` | danger |
 
-Category colours (chart slices) stay identical across modes for recognisability; they were chosen to sit on both grounds.
+### Category colours — anchored on the accent
+
+Chart slices, tiles and chips use a per-mood palette (`mobile/src/theme/palette.ts`) instead of one fixed hex per category, so the chart always reads as part of the brand: **Shopping wears the accent itself** (coral in Paper, lime in Arcade) and the rest are tuned to sit on that mood's card surface at ≥ 3:1 contrast. The canonical hex the API returns (`Category.color`) equals the Paper value and is what non-app clients (exports, email) use.
+
+| Category | Paper | Arcade |
+|---|---|---|
+| Shopping | `#FF5A36` (accent) | `#C8FF3D` (accent) |
+| Groceries | `#0E9F6E` | `#4ADE80` |
+| Eating Out | `#F28C28` | `#FFA85C` |
+| Electronics | `#3A6FF2` | `#6AA6FF` |
+| Transport | `#E6A100` | `#FBBF24` |
+| Fuel | `#A0673A` | `#D6A374` |
+| Bills & Utilities | `#6B7A90` | `#94A3B8` |
+| Health | `#E2453C` | `#F87171` |
+| Entertainment | `#8B5CF6` | `#B191FF` |
+| Education | `#0EA5C9` | `#22D3EE` |
+| Travel | `#14B8A6` | `#2DD4BF` |
+| Personal Care | `#EC5FA5` | `#FF4FA3` (pop) |
+| Home | `#B08968` | `#CDA97E` |
+| Gifts & Donations | `#D946A8` | `#F472B6` |
+| Fees & Charges | `#7C8894` | `#8B95A7` |
+| Uncategorised | `#A39C8D` | `#6B7386` |
+
+## Motion
+
+Small, physical, never decorative for its own sake (`mobile/src/theme/motion.ts`):
+
+- **Draw-in** — the donut sweeps in from 12 o'clock (750 ms, ease-out cubic); legend bars grow with it.
+- **Select** — the chosen slice lifts 7 px outward (260 ms) and the centre cross-fades (220 ms); legend row tints with the slice colour.
+- **Count-up** — hero totals tween to their value (650 ms).
+- **Press** — buttons and tiles scale to 0.95–0.96 with a spring; tab icons spring up 2 px with an accent dot.
+- **Reveal** — list rows fade + rise 12 px, staggered 30 ms, capped at 10 rows.
+
+## Layout rules
+
+- Every header row is `Row` + a `flex: 1, minWidth: 0` text block so trailing actions never leave the screen.
+- Anything that can be long gets `numberOfLines` (1 for titles/merchants, 2 for captions); big numbers add `adjustsFontSizeToFit`.
+- Secondary lines are one `Text` with nested spans, so truncation happens once, at the end.
+- The tab bar is five equal columns with the centre column empty under the tap button.
 
 ## Type
 

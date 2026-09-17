@@ -4,11 +4,13 @@ import { useMemo, useState } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, Share, TextInput, View } from 'react-native';
 import { ApiClientError } from '../../src/api/client';
 import { useHousehold, useHouseholdMutations, useSummary, useTransactions } from '../../src/api/hooks';
-import { DonutChart, type DonutSelection } from '../../src/components/DonutChart';
+import { BreakdownLegend } from '../../src/components/BreakdownLegend';
+import { DonutChart, type DonutSelection, buildSlices } from '../../src/components/DonutChart';
 import { TransactionRow } from '../../src/components/TransactionRow';
 import { Badge, Button, Card, EmptyState, Loading, Row, Screen, SectionHeader, Text } from '../../src/components/ui';
 import { useSession } from '../../src/store/session';
 import { type Theme, fonts, useTheme } from '../../src/theme';
+import { catColor } from '../../src/theme/palette';
 
 export default function Family() {
   const t = useTheme();
@@ -25,6 +27,7 @@ export default function Family() {
   const summary = useSummary('month', 0, 'shared');
   const feed = useTransactions({ scope: 'shared', categoryIds: sel?.categoryIds, limit: 30 });
   const rows = useMemo(() => feed.data?.pages.flatMap((p) => p.items) ?? [], [feed.data]);
+  const slices = useMemo(() => buildSlices(summary.data?.byCategory ?? [], (c) => catColor(c, t), t.colors.inkFaint), [summary.data, t]);
 
   const run = async (fn: () => Promise<unknown>) => {
     setError(null);
@@ -84,12 +87,14 @@ export default function Family() {
 
   const header = (
     <View style={{ gap: 10, paddingTop: 12 }}>
-      <Row style={{ justifyContent: 'space-between' }}>
-        <View>
+      <Row style={{ justifyContent: 'space-between' }} gap={12}>
+        <View style={{ flex: 1, minWidth: 0 }}>
           <Text variant="micro" faint>
             Household
           </Text>
-          <Text variant="title">{h.name}</Text>
+          <Text variant="title" numberOfLines={1}>
+            {h.name}
+          </Text>
         </View>
         <Pressable onPress={confirmLeave} hitSlop={8}>
           <Text variant="caption" color={t.colors.danger}>
@@ -98,28 +103,26 @@ export default function Family() {
         </Pressable>
       </Row>
 
-      <Card tone="accent" style={{ gap: 10 }}>
-        <Row style={{ justifyContent: 'space-between' }}>
-          <View>
-            <Text variant="micro" muted>
-              Invite code
-            </Text>
-            <Text variant="display" style={{ letterSpacing: 2 }}>
-              {h.inviteCode}
-            </Text>
-          </View>
-          <Row gap={6}>
-            <Button title="Copy" icon="copy-outline" variant="secondary" size="sm" onPress={copyInvite} />
-            <Button title="Share" icon="share-outline" size="sm" onPress={shareInvite} />
-          </Row>
+      <Card tone="accent" style={{ gap: 12 }}>
+        <Row style={{ justifyContent: 'space-between' }} gap={12}>
+          <Text variant="micro" muted>
+            Invite code
+          </Text>
+          {isOwner ? (
+            <Pressable onPress={() => run(() => rotateInvite.mutateAsync())} hitSlop={8}>
+              <Text variant="caption" color={t.colors.accent}>
+                New code
+              </Text>
+            </Pressable>
+          ) : null}
         </Row>
-        {isOwner ? (
-          <Pressable onPress={() => run(() => rotateInvite.mutateAsync())} hitSlop={8}>
-            <Text variant="caption" muted>
-              Generate a new code
-            </Text>
-          </Pressable>
-        ) : null}
+        <Text variant="hero" style={{ letterSpacing: 4 }} numberOfLines={1} adjustsFontSizeToFit>
+          {h.inviteCode}
+        </Text>
+        <Row gap={8}>
+          <Button title="Copy" icon="copy-outline" variant="secondary" size="sm" onPress={copyInvite} style={{ flex: 1 }} />
+          <Button title="Share" icon="share-outline" size="sm" onPress={shareInvite} style={{ flex: 1 }} />
+        </Row>
       </Card>
 
       <SectionHeader title={`Members · ${h.members.length}`} />
@@ -141,8 +144,17 @@ export default function Family() {
       </Row>
 
       <SectionHeader title="Shared spend" />
-      <Card style={{ alignItems: 'center', paddingVertical: 10 }}>
-        {summary.isLoading ? <Loading /> : <DonutChart data={summary.data?.byCategory ?? []} totalPaise={summary.data?.totalPaise ?? 0} selectedId={sel?.id ?? null} onSelect={setSel} periodLabel="household · month" />}
+      <Card style={{ gap: 6 }}>
+        {summary.isLoading ? (
+          <Loading />
+        ) : (
+          <>
+            <View style={{ alignItems: 'center' }}>
+              <DonutChart data={summary.data?.byCategory ?? []} totalPaise={summary.data?.totalPaise ?? 0} selectedId={sel?.id ?? null} onSelect={setSel} periodLabel="household · month" />
+            </View>
+            <BreakdownLegend slices={slices} selectedId={sel?.id ?? null} onSelect={setSel} />
+          </>
+        )}
       </Card>
       <Text variant="caption" muted style={{ textAlign: 'center' }}>
         Only purchases marked "shared" appear here. Toggle it on any purchase.

@@ -10,6 +10,7 @@ import { Chip, EmptyState, ErrorBanner, Loading, Row, Screen, Text } from '../..
 import { useSession } from '../../src/store/session';
 import { fonts, useTheme } from '../../src/theme';
 import { Icon, type IoniconName, categoryIconName } from '../../src/theme/icons';
+import { catColor } from '../../src/theme/palette';
 
 type DateKey = 'month' | 'last_month' | '90d' | 'all';
 type AmountKey = 'lt500' | '500_2k' | 'gt2k' | 'all';
@@ -146,7 +147,7 @@ export default function History() {
         </ScrollView>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
           {(cats.data ?? []).map((c) => (
-            <Chip key={c.id} icon={categoryIconName(c.slug)} label={c.name} color={c.color} selected={category === c.id} onPress={() => setCategory(category === c.id ? null : c.id)} />
+            <Chip key={c.id} icon={categoryIconName(c.slug)} label={c.name} color={catColor(c, t)} selected={category === c.id} onPress={() => setCategory(category === c.id ? null : c.id)} />
           ))}
         </ScrollView>
       </View>

@@ -13,22 +13,22 @@ export interface CategoryDefinition {
  * and to hold up in both light and dark themes.
  */
 export const CATEGORY_CATALOG: readonly CategoryDefinition[] = [
-  { slug: CategorySlug.GROCERIES, name: 'Groceries', icon: '🛒', color: '#2E9E6B' },
-  { slug: CategorySlug.RESTAURANTS, name: 'Eating Out', icon: '🍽️', color: '#E8743B' },
-  { slug: CategorySlug.SHOPPING, name: 'Shopping', icon: '🛍️', color: '#C24E8A' },
-  { slug: CategorySlug.ELECTRONICS, name: 'Electronics', icon: '📱', color: '#3F6FD8' },
-  { slug: CategorySlug.TRANSPORT, name: 'Transport', icon: '🚕', color: '#E1B12C' },
-  { slug: CategorySlug.FUEL, name: 'Fuel', icon: '⛽', color: '#8C5A2B' },
-  { slug: CategorySlug.BILLS_UTILITIES, name: 'Bills & Utilities', icon: '💡', color: '#5B6B7F' },
-  { slug: CategorySlug.HEALTH, name: 'Health', icon: '💊', color: '#D64545' },
-  { slug: CategorySlug.ENTERTAINMENT, name: 'Entertainment', icon: '🎬', color: '#7B4DD6' },
-  { slug: CategorySlug.EDUCATION, name: 'Education', icon: '📚', color: '#1F8FA5' },
-  { slug: CategorySlug.TRAVEL, name: 'Travel', icon: '✈️', color: '#2AA5B8' },
-  { slug: CategorySlug.PERSONAL_CARE, name: 'Personal Care', icon: '💇', color: '#E07AA9' },
-  { slug: CategorySlug.HOME, name: 'Home', icon: '🏠', color: '#9B7A4A' },
-  { slug: CategorySlug.GIFTS_DONATIONS, name: 'Gifts & Donations', icon: '🎁', color: '#D9534F' },
-  { slug: CategorySlug.FEES_CHARGES, name: 'Fees & Charges', icon: '🧾', color: '#7F8C8D' },
-  { slug: CategorySlug.UNCATEGORIZED, name: 'Uncategorised', icon: '❓', color: '#A0A4A8' },
+  { slug: CategorySlug.GROCERIES, name: 'Groceries', icon: '🛒', color: '#0E9F6E' },
+  { slug: CategorySlug.RESTAURANTS, name: 'Eating Out', icon: '🍽️', color: '#F28C28' },
+  { slug: CategorySlug.SHOPPING, name: 'Shopping', icon: '🛍️', color: '#FF5A36' },
+  { slug: CategorySlug.ELECTRONICS, name: 'Electronics', icon: '📱', color: '#3A6FF2' },
+  { slug: CategorySlug.TRANSPORT, name: 'Transport', icon: '🚕', color: '#E6A100' },
+  { slug: CategorySlug.FUEL, name: 'Fuel', icon: '⛽', color: '#A0673A' },
+  { slug: CategorySlug.BILLS_UTILITIES, name: 'Bills & Utilities', icon: '💡', color: '#6B7A90' },
+  { slug: CategorySlug.HEALTH, name: 'Health', icon: '💊', color: '#E2453C' },
+  { slug: CategorySlug.ENTERTAINMENT, name: 'Entertainment', icon: '🎬', color: '#8B5CF6' },
+  { slug: CategorySlug.EDUCATION, name: 'Education', icon: '📚', color: '#0EA5C9' },
+  { slug: CategorySlug.TRAVEL, name: 'Travel', icon: '✈️', color: '#14B8A6' },
+  { slug: CategorySlug.PERSONAL_CARE, name: 'Personal Care', icon: '💇', color: '#EC5FA5' },
+  { slug: CategorySlug.HOME, name: 'Home', icon: '🏠', color: '#B08968' },
+  { slug: CategorySlug.GIFTS_DONATIONS, name: 'Gifts & Donations', icon: '🎁', color: '#D946A8' },
+  { slug: CategorySlug.FEES_CHARGES, name: 'Fees & Charges', icon: '🧾', color: '#7C8894' },
+  { slug: CategorySlug.UNCATEGORIZED, name: 'Uncategorised', icon: '❓', color: '#A39C8D' },
 ];
 
 export const CATEGORY_BY_SLUG: Readonly<Record<CategorySlug, CategoryDefinition>> =

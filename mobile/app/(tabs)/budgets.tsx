@@ -28,10 +28,10 @@ export default function Budgets() {
         contentContainerStyle={{ paddingBottom: 150, gap: 10 }}
         showsVerticalScrollIndicator={false}
       >
-        <Row style={{ justifyContent: 'space-between', marginTop: 12 }}>
-          <View>
+        <Row style={{ justifyContent: 'space-between', marginTop: 12 }} gap={12}>
+          <View style={{ flex: 1, minWidth: 0 }}>
             <Text variant="title">Budgets</Text>
-            <Text variant="caption" muted>
+            <Text variant="caption" muted numberOfLines={2}>
               Caps per category. We nudge you at 80%.
             </Text>
           </View>
