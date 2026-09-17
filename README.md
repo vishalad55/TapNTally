@@ -122,6 +122,17 @@ node -e "console.log('ENCRYPTION_KEY=' + require('crypto').randomBytes(32).toStr
 
 Errors always have the shape `{ statusCode, code, message, details? }` with stable codes (`NFC_MALFORMED_BILL`, `AUTH_REFRESH_REUSED`, …) the app branches on.
 
+### Live demo (Vercel)
+
+| | URL | Project |
+|---|---|---|
+| Web app | https://tapntally.vercel.app | `tapntally` — static Expo web export |
+| API | https://tap-n-tally-backend.vercel.app | `tap-n-tally-backend` — git-linked, Root Directory `backend` |
+
+The hosted API runs in **demo mode**: `DEMO_MODE=true`, an in-memory sql.js database that is auto-seeded on every cold start, dev login enabled, and secrets derived per deployment by `backend/api/index.js` unless real env vars are set. Data is ephemeral by design; every instance agrees on ids because canonical categories and seeded rows use stable UUIDs (`stable-uuid.ts`). Set `JWT_SECRET`, `ENCRYPTION_KEY`, `INTERNAL_API_KEY`, `DB_DRIVER=postgres`, `DATABASE_URL` and `DEMO_MODE=false` in the Vercel dashboard to turn it into a real deployment.
+
+The web project is a manual file deploy whose `build.sh` clones this repo and runs `expo export --platform web` with `EXPO_PUBLIC_API_URL` pointing at the API; the API project auto-deploys from `main`.
+
 ### Production deployment
 
 `docker-compose.yml` runs Postgres + Redis + the API the way production should look:
