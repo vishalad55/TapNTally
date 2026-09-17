@@ -23,7 +23,9 @@ async function createServer(): Promise<express.Express> {
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server), { bufferLogs: true });
   const config = app.get(AppConfigService);
   app.use(helmet());
-  app.enableCors({ origin: config.get('CORS_ORIGINS').split(',').map((s) => s.trim()).filter(Boolean) || true, credentials: true });
+  // Empty allow-list → reflect any origin (hosted demo); set CORS_ORIGINS to lock it down.
+  const origins = config.get('CORS_ORIGINS').split(',').map((s) => s.trim()).filter(Boolean);
+  app.enableCors({ origin: origins.length ? origins : true, credentials: true });
   app.setGlobalPrefix('api/v1', { exclude: ['health', 'webhooks/(.*)'] });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalFilters(new HttpExceptionFilter());
