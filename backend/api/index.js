@@ -22,5 +22,33 @@ const defaults = {
 };
 for (const [k, v] of Object.entries(defaults)) if (!process.env[k]) process.env[k] = v;
 
-const { handler } = require('../dist/vercel-entry.js');
-module.exports = handler;
+// Load-time failures (a missing bundle file, a bad native dep) would otherwise
+// surface only as an opaque FUNCTION_INVOCATION_FAILED; report them instead.
+let handler;
+let loadError;
+try {
+  ({ handler } = require('../dist/vercel-entry.js'));
+} catch (err) {
+  loadError = err;
+  // eslint-disable-next-line no-console
+  console.error('vercel-entry failed to load', err);
+}
+
+module.exports = (req, res) => {
+  if (loadError) {
+    res.statusCode = 500;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(
+      JSON.stringify({
+        statusCode: 500,
+        code: 'BOOT_LOAD_FAILED',
+        message: String(loadError && loadError.message),
+        stack: String(loadError && loadError.stack).split('\n').slice(0, 8),
+        cwd: process.cwd(),
+        node: process.version,
+      }),
+    );
+    return;
+  }
+  return handler(req, res);
+};
