@@ -12,6 +12,9 @@ class UpdateMeDto {
 
   @IsOptional() @IsBoolean()
   aggregateInsightsConsent?: boolean;
+
+  @IsOptional() @IsBoolean()
+  onboardingCompleted?: boolean;
 }
 
 class RegisterDeviceDto {

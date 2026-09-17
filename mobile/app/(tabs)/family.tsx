@@ -116,7 +116,7 @@ export default function Family() {
             </Pressable>
           ) : null}
         </Row>
-        <Text variant="hero" style={{ letterSpacing: 4 }} numberOfLines={1} adjustsFontSizeToFit>
+        <Text variant="display" style={{ letterSpacing: 3 }} numberOfLines={1}>
           {h.inviteCode}
         </Text>
         <Row gap={8}>

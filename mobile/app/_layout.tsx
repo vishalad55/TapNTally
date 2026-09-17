@@ -55,6 +55,8 @@ export default function RootLayout() {
           >
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
+            <Stack.Screen name="pair" options={{ title: 'Pair with a terminal', presentation: 'modal' }} />
             <Stack.Screen name="transaction/[id]" options={{ title: 'Purchase' }} />
             <Stack.Screen name="add-transaction" options={{ title: 'Add a purchase', presentation: 'modal' }} />
             <Stack.Screen name="budget-edit" options={{ title: 'Set a budget', presentation: 'modal' }} />

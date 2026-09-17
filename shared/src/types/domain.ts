@@ -23,6 +23,8 @@ export interface User {
   householdRole: HouseholdRole | null;
   /** Whether the user has opted in to anonymised aggregate reporting. */
   aggregateInsightsConsent: boolean;
+  /** True once the first-run onboarding has been completed (or skipped) on any device. */
+  onboardingCompleted: boolean;
   createdAt: IsoDateString;
 }
 

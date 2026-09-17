@@ -139,10 +139,13 @@ export const useDeleteBudget = () => {
   });
 };
 
+/** Six-character code a partner terminal uses to route a bill to this account (server-to-server path). */
+export const usePairingCode = () => useMutation({ mutationFn: () => api<{ code: string; expiresAt: string }>('/pos/pairing-code', { method: 'POST' }) });
+
 export const useUpdateMe = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { name?: string; aggregateInsightsConsent?: boolean }) => api<User>('/users/me', { method: 'PATCH', body }),
+    mutationFn: (body: { name?: string; aggregateInsightsConsent?: boolean; onboardingCompleted?: boolean }) => api<User>('/users/me', { method: 'PATCH', body }),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.me }),
   });
 };

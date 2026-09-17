@@ -41,4 +41,8 @@ export class UserEntity extends BaseEntity {
 
   @Column({ type: DB.timestamp, nullable: true })
   lastSeenAt: Date | null;
+
+  /** Set when first-run onboarding finishes; null shows the flow again on a new device. */
+  @Column({ type: DB.timestamp, nullable: true })
+  onboardingCompletedAt: Date | null;
 }

@@ -90,6 +90,31 @@ export default function Settings() {
         </Text>
       </Card>
 
+      <SectionHeader title="Terminals" />
+      <Pressable onPress={() => router.push('/pair')}>
+        <Card>
+          <Row style={{ justifyContent: 'space-between' }}>
+            <View style={{ flex: 1 }}>
+              <Text variant="heading">Pair with a terminal</Text>
+              <Text variant="caption" muted>
+                For counters that can't tap: show a 6-character code instead.
+              </Text>
+            </View>
+            <Icon name="chevron-forward" color={t.colors.inkFaint} />
+          </Row>
+        </Card>
+      </Pressable>
+      <Pressable onPress={() => router.push('/onboarding')}>
+        <Card>
+          <Row style={{ justifyContent: 'space-between' }}>
+            <View style={{ flex: 1 }}>
+              <Text variant="heading">Replay the welcome tour</Text>
+            </View>
+            <Icon name="chevron-forward" color={t.colors.inkFaint} />
+          </Row>
+        </Card>
+      </Pressable>
+
       <SectionHeader title="Tap to pay terminal" />
       <Card style={{ gap: 10 }}>
         <Text variant="caption" muted>

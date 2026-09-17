@@ -132,6 +132,16 @@ export function TapFlow() {
             </Row>
             {!state.retryable ? (
               <Button
+                title="Use a pairing code instead"
+                variant="ghost"
+                onPress={() => {
+                  setState({ kind: 'idle' });
+                  router.push('/pair');
+                }}
+              />
+            ) : null}
+            {!state.retryable ? (
+              <Button
                 title="Add it manually instead"
                 variant="ghost"
                 onPress={() => {

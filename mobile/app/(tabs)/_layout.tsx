@@ -7,7 +7,9 @@ import { useTheme } from '../../src/theme';
 export default function TabsLayout() {
   const t = useTheme();
   const status = useSession((s) => s.status);
+  const user = useSession((s) => s.user);
   if (status === 'signed_out') return <Redirect href="/(auth)/sign-in" />;
+  if (status === 'signed_in' && user && !user.onboardingCompleted) return <Redirect href="/onboarding" />;
 
   return (
     <>

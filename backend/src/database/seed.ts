@@ -15,7 +15,7 @@ import {
   normalizeMerchant,
 } from '@tapntally/shared';
 import { config as loadDotenv } from 'dotenv';
-import { createCipheriv, randomBytes } from 'node:crypto';
+import { createCipheriv, createHash, randomBytes } from 'node:crypto';
 import { DataSource } from 'typeorm';
 import { AppConfig, loadConfig } from '../config/configuration';
 import { stableUuid } from '../common/utils/stable-uuid';
@@ -25,6 +25,7 @@ import {
   CategoryEntity,
   ConnectionEntity,
   HouseholdEntity,
+  PosPartnerEntity,
   PosTerminalEntity,
   TransactionEntity,
   UserEntity,
@@ -42,6 +43,8 @@ import {
  * Demo terminal secret:        demo-terminal-secret-0001   (network=demo, id=DEMO-001)
  */
 export const DEMO_TERMINAL_SECRET = 'demo-terminal-secret-0001';
+/** Partner API key accepted by the hosted demo (server-to-server bill push). */
+export const DEMO_PARTNER_KEY = 'tnt_demo_partner_key';
 export const DEMO_EMAILS = ['demo@tapntally.app', 'priya@tapntally.app'] as const;
 
 function encryptWith(keyB64: string, plaintext: string): string {
@@ -117,6 +120,12 @@ export async function seedDemo(ds: DataSource, cfg: Pick<AppConfig, 'ENCRYPTION_
   const budgets = ds.getRepository(BudgetEntity);
   const connections = ds.getRepository(ConnectionEntity);
   const terminals = ds.getRepository(PosTerminalEntity);
+  const partners = ds.getRepository(PosPartnerEntity);
+  let partner = await partners.findOne({ where: { network: 'demo' } });
+  if (!partner) partner = partners.create({ id: stableUuid('partner:demo'), network: 'demo', displayName: 'Demo partner' });
+  partner.apiKeyHash = createHash('sha256').update(DEMO_PARTNER_KEY).digest('hex');
+  partner.active = true;
+  await partners.save(partner);
 
   const catBySlug = new Map<CategorySlug, CategoryEntity>();
   for (const [i, def] of CATEGORY_CATALOG.entries()) {
@@ -144,7 +153,8 @@ export async function seedDemo(ds: DataSource, cfg: Pick<AppConfig, 'ENCRYPTION_
   const demo = await users.save(
     users.create({
       id: stableUuid('user:demo@tapntally.app'),
-      email: 'demo@tapntally.app', name: 'Arjun Sharma', avatarUrl: null, googleSub: null,
+      email: 'demo@tapntally.app',
+      onboardingCompletedAt: new Date(), name: 'Arjun Sharma', avatarUrl: null, googleSub: null,
       householdId: household.id, householdRole: HouseholdRole.OWNER, householdJoinedAt: new Date(Date.now() - 40 * 86400e3),
       aggregateInsightsConsent: true,
     }),
@@ -152,7 +162,8 @@ export async function seedDemo(ds: DataSource, cfg: Pick<AppConfig, 'ENCRYPTION_
   const priya = await users.save(
     users.create({
       id: stableUuid('user:priya@tapntally.app'),
-      email: 'priya@tapntally.app', name: 'Priya Sharma', avatarUrl: null, googleSub: null,
+      email: 'priya@tapntally.app',
+      onboardingCompletedAt: new Date(), name: 'Priya Sharma', avatarUrl: null, googleSub: null,
       householdId: household.id, householdRole: HouseholdRole.MEMBER, householdJoinedAt: new Date(Date.now() - 38 * 86400e3),
       aggregateInsightsConsent: true,
     }),

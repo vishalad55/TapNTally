@@ -1,0 +1,24 @@
+{
+  "v": 1,
+  "billId": "RF-KOR-000123",
+  "issuedAt": "2026-09-18T13:05:00+05:30",
+  "currency": "INR",
+  "merchant": {
+    "name": "Reliance Fresh - Koramangala",
+    "merchantId": "RIL-KOR-01",
+    "gstin": "29AABCR1718E1ZL",
+    "mcc": "5411",
+    "address": "80 Feet Rd, Bengaluru"
+  },
+  "terminal": { "network": "demo", "terminalId": "DEMO-001" },
+  "items": [
+    { "name": "Amul Taaza Milk 1L", "qty": 2, "unitPaise": 6800, "totalPaise": 13600, "sku": "8901262010115", "gstRate": 0 },
+    { "name": "Aashirvaad Atta 5kg", "qty": 1, "unitPaise": 28500, "totalPaise": 28500 },
+    { "name": "Bananas (Robusta)", "qty": 1.2, "unitPaise": 5000, "totalPaise": 6000 }
+  ],
+  "subtotalPaise": 48100,
+  "taxPaise": 0,
+  "discountPaise": 600,
+  "totalPaise": 47500,
+  "paymentMethod": "card"
+}

@@ -14,10 +14,11 @@ export class UsersService {
     return user;
   }
 
-  async update(id: string, patch: { name?: string; aggregateInsightsConsent?: boolean }): Promise<UserEntity> {
+  async update(id: string, patch: { name?: string; aggregateInsightsConsent?: boolean; onboardingCompleted?: boolean }): Promise<UserEntity> {
     const user = await this.getOrThrow(id);
     if (patch.name !== undefined) user.name = patch.name.trim();
     if (patch.aggregateInsightsConsent !== undefined) user.aggregateInsightsConsent = patch.aggregateInsightsConsent;
+    if (patch.onboardingCompleted !== undefined) user.onboardingCompletedAt = patch.onboardingCompleted ? (user.onboardingCompletedAt ?? new Date()) : null;
     return this.users.save(user);
   }
 
@@ -30,6 +31,7 @@ export class UsersService {
       householdId: u.householdId,
       householdRole: u.householdRole,
       aggregateInsightsConsent: u.aggregateInsightsConsent,
+      onboardingCompleted: u.onboardingCompletedAt !== null && u.onboardingCompletedAt !== undefined,
       createdAt: u.createdAt.toISOString(),
     };
   }
