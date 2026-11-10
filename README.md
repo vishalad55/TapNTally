@@ -11,6 +11,7 @@ TapNTally/
 ├── shared/    TypeScript contract: enums, DTOs, money utils, categoriser, TBEF bill format + validator
 ├── backend/   NestJS API (TypeORM · sql.js for dev, PostgreSQL for prod · BullMQ or in-process jobs)
 ├── mobile/    Expo (React Native) app with expo-router — NFC, Gmail/SMS connections, budgets, family
+├── flutter_app/  Flutter rebuild of the mobile app (same API) — see flutter_app/README.md
 └── docs/      Architecture notes and the TBEF partner integration spec
 ```
 
